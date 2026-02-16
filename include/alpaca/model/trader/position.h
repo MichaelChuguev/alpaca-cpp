@@ -6,6 +6,7 @@
 #include "nlohmann/json.hpp"
 
 #include "alpaca/core/types.h"
+#include "alpaca/core/util.h"
 #include "alpaca/model/trader/order.h"
 
 namespace alpaca {
@@ -37,28 +38,21 @@ struct Position {
     :
         asset_id(j["asset_id"].get<std::string>()),
         symbol(j["symbol"].get<std::string>()),
-        exchange(j["exchange"].get<std::string>() == "AMEX" ? Exchange::AMEX : 
-                 j["exchange"].get<std::string>() == "NYSE" ? Exchange::NYSE :
-                 j["exchange"].get<std::string>() == "NASDAQ" ? Exchange::NASDAQ :
-                 j["exchange"].get<std::string>() == "BATS" ? Exchange::BATS :
-                 j["exchange"].get<std::string>() == "NYSEARCA" ? Exchange::NYSEARCA :
-                 j["exchange"].get<std::string>() == "OTC" ? Exchange::OTC : Exchange::NYSE),
-        asset_class(j["asset_class"].get<std::string>() == "us_equity" ? AssetClass::US_EQUITY :
-                    j["asset_class"].get<std::string>() == "us_option" ? AssetClass::US_OPTION :
-                    j["asset_class"].get<std::string>() == "crypto" ? AssetClass::CRYPTO : AssetClass::US_EQUITY),
-        avg_entry_price(j["avg_entry_price"].get<double>()),
-        qty(j["qty"].get<double>()),
-        qty_available(j["qty_available"].get<double>()),
-        side(j["side"].get<std::string>() == "buy" ? OrderSide::BUY : OrderSide::SELL),
-        market_value(j["market_value"].get<double>()),
-        cost_basis(j["cost_basis"].get<double>()),
-        unrealized_pl(j["unrealized_pl"].get<double>()),
-        unrealized_plpc(j["unrealized_plpc"].get<double>()),
-        unrealized_intraday_pl(j["unrealized_intraday_pl"].get<double>()),
-        unrealized_intraday_plpc(j["unrealized_intraday_plpc"].get<double>()),
-        current_price(j["current_price"].get<double>()),
-        lastday_price(j["lastday_price"].get<double>()),
-        change_today(j["change_today"].get<double>()),
+        exchange(string_to_exchange(j["exchange"].get<std::string>())),
+        asset_class(string_to_asset_class(j["asset_class"].get<std::string>())),
+        avg_entry_price(parse_decimal(j, "avg_entry_price")),
+        qty(parse_decimal(j, "qty")),
+        qty_available(parse_decimal(j, "qty_available")),
+        side(string_to_order_side(j["side"].get<std::string>())),
+        market_value(parse_decimal(j, "market_value")),
+        cost_basis(parse_decimal(j, "cost_basis")),
+        unrealized_pl(parse_decimal(j, "unrealized_pl")),
+        unrealized_plpc(parse_decimal(j, "unrealized_plpc")),
+        unrealized_intraday_pl(parse_decimal(j, "unrealized_intraday_pl")),
+        unrealized_intraday_plpc(parse_decimal(j, "unrealized_intraday_plpc")),
+        current_price(parse_decimal(j, "current_price")),
+        lastday_price(parse_decimal(j, "lastday_price")),
+        change_today(parse_decimal(j, "change_today")),
         asset_marginable(j["asset_marginable"].get<bool>())
     {
     }
@@ -67,15 +61,8 @@ struct Position {
         std::ostringstream oss;
         oss << "Position: " << symbol << "\n" 
             << "Asset ID: " << asset_id << "\n"
-            << "Exchange: " << (exchange == Exchange::AMEX ? "AMEX" : 
-                              exchange == Exchange::NYSE ? "NYSE" : 
-                              exchange == Exchange::NASDAQ ? "NASDAQ" : 
-                              exchange == Exchange::BATS ? "BATS" : 
-                              exchange == Exchange::NYSEARCA ? "NYSEARCA" : 
-                              exchange == Exchange::OTC ? "OTC" : "UNKNOWN") << "\n"
-            << "Asset Class: " << (asset_class == AssetClass::US_EQUITY ? "US_EQUITY" : 
-                                 asset_class == AssetClass::US_OPTION ? "US_OPTION" : 
-                                 asset_class == AssetClass::CRYPTO ? "CRYPTO" : "UNKNOWN") << "\n"
+            << "Exchange: " << exchange_to_string(exchange) << "\n"
+            << "Asset Class: " << asset_class_to_string(asset_class) << "\n"
             << "Avg Entry Price: " << avg_entry_price << "\n"
             << "Qty: " << qty << "\n"
             << "Qty Available: " << qty_available << "\n"
@@ -97,19 +84,12 @@ struct Position {
         json j;
         j["asset_id"] = asset_id;
         j["symbol"] = symbol;
-        j["exchange"] = (exchange == Exchange::AMEX ? "AMEX" : 
-                         exchange == Exchange::NYSE ? "NYSE" : 
-                         exchange == Exchange::NASDAQ ? "NASDAQ" : 
-                         exchange == Exchange::BATS ? "BATS" : 
-                         exchange == Exchange::NYSEARCA ? "NYSEARCA" : 
-                         exchange == Exchange::OTC ? "OTC" : "UNKNOWN");
-        j["asset_class"] = (asset_class == AssetClass::US_EQUITY ? "us_equity" : 
-                            asset_class == AssetClass::US_OPTION ? "us_option" : 
-                            asset_class == AssetClass::CRYPTO ? "crypto" : "unknown");
+        j["exchange"] = exchange_to_string(exchange);
+        j["asset_class"] = asset_class_to_string(asset_class);
         j["avg_entry_price"] = avg_entry_price;
         j["qty"] = qty;
         j["qty_available"] = qty_available;
-        j["side"] = (side == OrderSide::BUY ? "buy" : "sell");
+        j["side"] = order_side_to_string(side);
         j["market_value"] = market_value;
         j["cost_basis"] = cost_basis;
         j["unrealized_pl"] = unrealized_pl;

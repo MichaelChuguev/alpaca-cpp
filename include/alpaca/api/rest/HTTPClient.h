@@ -32,19 +32,14 @@ public:
     {
     }
 
-    //HttpClient(const std::string& traderOAuthToken, const TraderAPIEndpoint& traderAPIEndpoint);
-    //:
-    //{
-    //}
     HttpClient(const std::string& traderOAuthToken, const TraderAPIEndpoint& traderAPIEndpoint)
     : 
         trader_oauth_token(traderOAuthToken),
         trader_api_endpoint(traderAPIEndpoint),
         is_broker_api(false),
         resolver_(std::make_unique<tcp::resolver>(ioc_)) 
-{
-    // You'd need to decide what to do about trader_key_secret in this case
-}
+    {
+    }
 
     HttpClient(const std::string& brokerAPIKey, const std::string& brokerAPISecret, const BrokerAPIEndpoint& brokerAPIEndpoint) 
     : 
@@ -57,11 +52,13 @@ public:
     }
 
     // Core methods
-    nlohmann::json get(const std::string& endpoint);
-    nlohmann::json post(const std::string& endpoint, const nlohmann::json& body);
-    nlohmann::json patch(const std::string& endpoint, const nlohmann::json& body);
-    nlohmann::json put(const std::string& endpoint, const nlohmann::json& body);
-    nlohmann::json del(const std::string& endpoint);
+    virtual nlohmann::json get(const std::string& endpoint);
+    virtual nlohmann::json post(const std::string& endpoint, const nlohmann::json& body);
+    virtual nlohmann::json patch(const std::string& endpoint, const nlohmann::json& body);
+    virtual nlohmann::json put(const std::string& endpoint, const nlohmann::json& body);
+    virtual nlohmann::json del(const std::string& endpoint);
+
+    virtual ~HttpClient() = default;
     
     // Async variants
     void async_get(const std::string& endpoint, std::function<void(nlohmann::json)> callback);

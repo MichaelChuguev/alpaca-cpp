@@ -67,7 +67,7 @@ struct OptionContract {
             return oss.str();
         }
 
-        std::string to_json() const {
+        json to_json() const {
             json j;
             j["type"] = type;
             j["symbol"] = symbol;
@@ -78,7 +78,7 @@ struct OptionContract {
             j["settlement_method"] = settlement_method;
             j["delayed_settlement"] = delayed_settlement;
 
-            return j.dump();
+            return j;
         }
     };
 
@@ -158,7 +158,7 @@ struct OptionContract {
         return oss.str();
     }
 
-    std::string to_json() const {
+    json to_json() const {
         json j;
         j["id"] = id;
         j["symbol"] = symbol;
@@ -180,10 +180,10 @@ struct OptionContract {
         j["close_price_date"] = close_price_date.to_string();
         
         for (const auto& deliverable : deliverables) {
-            j["deliverables"].push_back(json::parse(deliverable.to_json()));
+            j["deliverables"].push_back(deliverable.to_json());
         }
         
-        return j.dump();
+        return j;
     }
 
 };

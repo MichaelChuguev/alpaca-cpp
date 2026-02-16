@@ -31,6 +31,7 @@ add_subdirectory(src)
 # Add tests if enabled
 if(ALPACA_BUILD_TESTS)
     enable_testing()
+    add_subdirectory(test)
 endif()
 
 # Add examples if enabled
@@ -40,4 +41,33 @@ endif()
 
 # Installation configuration
 include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+# Install headers
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+# Generate package configuration files
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/alpaca-cppConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/alpaca-cppConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/alpaca-cpp
+)
+
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/alpaca-cppConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+
+# Install config files
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/alpaca-cppConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/alpaca-cppConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/alpaca-cpp
+)
+
+# Export targets for build tree (allows using library without installing)
+export(EXPORT alpaca-cpp-targets
+    FILE ${CMAKE_CURRENT_BINARY_DIR}/alpaca-cppTargets.cmake
+    NAMESPACE alpaca::
+)

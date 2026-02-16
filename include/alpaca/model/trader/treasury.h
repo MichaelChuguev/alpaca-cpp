@@ -104,7 +104,7 @@ struct Treasury {
             << "Close Yield to Worst: " << close_yield_to_worst << "\n"
             << "Coupon: " << coupon << "\n"
             << "Coupon Type: " << (coupon_type == FIXED ? "FIXED" : (coupon_type == FLOATING ? "FLOATING" : "ZERO"))<< "\n"
-            << "Coupon Frequency: "<< (coupon_frequency == ANNUAL ?  ANNUAL : (coupon_frequency == SEMI_ANNUAL ? SEMI_ANNUAL : (coupon_frequency == QUARTERLY ? QUARTERLY : (coupon_frequency == MONTHLY ? MONTHLY : ZERO))))<< "\n"
+            << "Coupon Frequency: "<< (coupon_frequency == ANNUAL ? "ANNUAL" : (coupon_frequency == SEMI_ANNUAL ? "SEMI_ANNUAL" : (coupon_frequency == QUARTERLY ? "QUARTERLY" : (coupon_frequency == MONTHLY ? "MONTHLY" : "ZERO"))))<< "\n"
             <<  "First Coupon Date: " << first_coupon_date.to_string() << "\n"
             <<  "Next Coupon Date: " << next_coupon_date.to_string() << "\n"
             <<  "Last Coupon Date: " << last_coupon_date.to_string() << "\n";

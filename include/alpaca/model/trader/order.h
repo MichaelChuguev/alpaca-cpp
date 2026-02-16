@@ -6,47 +6,11 @@
 #include "nlohmann/json.hpp"
 
 #include "alpaca/core/types.h"
+#include "alpaca/core/util.h"
 
 namespace alpaca {
 
 using json = nlohmann::json;
-
-enum OrderSide {
-    BUY,
-    SELL
-};
-
-enum OrderType {
-    MARKET,
-    LIMIT, 
-    STOP,
-    STOP_LIMIT,
-    TRAILING_STOP
-};
-
-enum OrderTimeInForce {
-    DAY, // Day Order
-    GTC, // Good Till Cancelled
-    OPG, 
-    CLS, 
-    IOC, // Immediate Or Cancel
-    FOK, // Fill Or Kill 
-};
-
-enum OrderClass {
-    SIMPLE, 
-    BRACKET, 
-    OCO, // One Cancels Other
-    OTO, // One Triggers Other
-    MLEG // Multi-Leg
-};
-
-enum PositionIntent {
-    BUY_TO_OPEN,
-    BUY_TO_CLOSE,
-    SELL_TO_OPEN,
-    SELL_TO_CLOSE
-};
 
 struct Leg {
 
@@ -119,11 +83,11 @@ struct Order {
     /**
      * 
      */
-    Order(const std::string& symbol, const double& qty, const OrderSide& side, const OrderType& type, const OrderTimeInForce& time_in_force);
-
-    //TODO MORE ORDER CONSTRUCTS
-
-
+    Order(const std::string& symbol, const double& qty, const OrderSide& side, const OrderType& type, const OrderTimeInForce& time_in_force)
+    : symbol(symbol), qty(qty), notional(0.0), side(side), type(type), time_in_force(time_in_force),
+      limit_price(0.0), stop_price(0.0), trail_price(0.0), trail_percent(0.0),
+      extended_hours(false), order_class(OrderClass::SIMPLE), position_intent(PositionIntent::BUY_TO_OPEN)
+    {}
 
 
     std::string to_string() const {
@@ -174,48 +138,52 @@ struct Order {
     
         json j;
         j["symbol"] = symbol;
-        j["qty"] = std::to_string(qty);
-        j["notional"] = std::to_string(notional);
-        j["side"] = (side == BUY ? "buy" : "sell");
-        j["type"] = (type == MARKET ? "market" : 
-                     type == LIMIT ? "limit" : 
-                     type == STOP ? "stop" : 
-                     type == STOP_LIMIT ? "stop_limit" : 
-                     type == TRAILING_STOP ? "trailing_stop" : "unknown");
-        j["time_in_force"] = (time_in_force == DAY ? "day" : 
-                                time_in_force == GTC ? "gtc" : 
-                                time_in_force == OPG ? "opg" : 
-                                time_in_force == CLS ? "cls" : 
-                                time_in_force == IOC ? "ioc" : 
-                                time_in_force == FOK ? "fok" : "unknown");
-    
-        j["limit_price"] = std::to_string(limit_price);
-        j["stop_price"] = std::to_string(stop_price);
-        j["trail_price"] = std::to_string(trail_price);
-        j["trail_percent"] = std::to_string(trail_percent);
-        j["extended_hours"] = extended_hours;
-        j["client_order_id"] = client_order_id;
-        j["order_class"] = (order_class == SIMPLE ? "simple" : 
-                            order_class == OCO ? "oco" : 
-                            order_class == BRACKET ? "bracket" : 
-                            order_class == MLEG ? "mleg" : 
-                            order_class == OTO ? "oto" : "unknown");
-        j["position_intent"] = (position_intent == BUY_TO_OPEN ? "buy_to_open" : 
-                                position_intent == BUY_TO_CLOSE ? "buy_to_close" : 
-                                position_intent == SELL_TO_OPEN ? "sell_to_open" : 
-                                position_intent == SELL_TO_CLOSE ? "sell_to_close" : "unknown");
-        j["legs"] = json::array();
-        for (const auto& leg : legs) {
-            json leg_json;
-            leg_json["symbol"] = leg.symbol;
-            leg_json["side"] = (leg.side == BUY ? "buy" : "sell");
-            leg_json["ratio_qty"] = std::to_string(leg.ratio_qty);
-            leg_json["position_intent"] = (leg.position_intent == BUY_TO_OPEN ? "buy_to_open" : 
-                                           leg.position_intent == BUY_TO_CLOSE ? "buy_to_close" : 
-                                           leg.position_intent == SELL_TO_OPEN ? "sell_to_open" : 
-                                           leg.position_intent == SELL_TO_CLOSE ? "sell_to_close" : "unknown");
-            j["legs"].push_back(leg_json);
+        
+        if (qty > 0) {
+            j["qty"] = qty;
+        } else if (notional > 0) {
+            j["notional"] = notional;
         }
+        
+        j["side"] = order_side_to_string(side);
+        j["type"] = order_type_to_string(type);
+        j["time_in_force"] = time_in_force_to_string(time_in_force);
+    
+        if (limit_price > 0) {
+            j["limit_price"] = std::to_string(limit_price);
+        }
+        if (stop_price > 0) {
+            j["stop_price"] = std::to_string(stop_price);
+        }
+        if (trail_price > 0) {
+            j["trail_price"] = std::to_string(trail_price);
+        }
+        if (trail_percent > 0) {
+            j["trail_percent"] = std::to_string(trail_percent);
+        }
+        
+        if (extended_hours) {
+            j["extended_hours"] = extended_hours;
+        }
+        if (!client_order_id.empty()) {
+            j["client_order_id"] = client_order_id;
+        }
+        
+        if (order_class != SIMPLE) {
+            j["order_class"] = order_class_to_string(order_class);
+        }
+        
+        if (!legs.empty()) {
+            j["legs"] = json::array();
+            for (const auto& leg : legs) {
+                json leg_json;
+                leg_json["symbol"] = leg.symbol;
+                leg_json["side"] = order_side_to_string(leg.side);
+                leg_json["ratio_qty"] = leg.ratio_qty;
+                j["legs"].push_back(leg_json);
+            }
+        }
+        
         if (!take_profit.empty()) {
             j["take_profit"] = json::object();
             for (const auto& [key, value] : take_profit) {
@@ -466,58 +434,41 @@ struct OrderResponse {
 
     OrderResponse(const json& j)
     : 
-        id(j["id"].get<std::string>()),
-        client_order_id(j["client_order_id"].get<std::string>()),
-        created_at(DateTime::parse(j["created_at"].get<std::string>())),
-        updated_at(DateTime::parse(j["updated_at"].get<std::string>())),
-        submitted_at(DateTime::parse(j["submitted_at"].get<std::string>())),
-        filled_at(DateTime::parse(j["filled_at"].get<std::string>())),
-        expired_at(DateTime::parse(j["expired_at"].get<std::string>())),
-        canceled_at(DateTime::parse(j["canceled_at"].get<std::string>())),
-        failed_at(DateTime::parse(j["failed_at"].get<std::string>())),
-        replaced_at(DateTime::parse(j["replaced_at"].get<std::string>())),
-        replaced_by(j["replaced_by"].get<std::string>()),
-        replaces(j["replaces"].get<std::string>()),
-        asset_id(j["asset_id"].get<std::string>()),
-        symbol(j["symbol"].get<std::string>()),
-        asset_class(j["asset_class"].get<std::string>() == "us_equity" ? US_EQUITY : 
-                    j["asset_class"].get<std::string>() == "us_option" ? US_OPTION : CRYPTO),
-        notional(j["notional"].get<double>()),
-        qty(j["qty"].get<double>()),
-        filled_qty(j["filled_qty"].get<double>()),
-        filled_avg_price(j["filled_avg_price"].get<double>()),
-        order_class(j["order_class"].get<std::string>() == "simple" ? SIMPLE : 
-                    j["order_class"].get<std::string>() == "oco" ? OCO : 
-                    j["order_class"].get<std::string>() == "bracket" ? BRACKET : 
-                    j["order_class"].get<std::string>() == "mleg" ? MLEG : OTO),
-        type(j["type"].get<std::string>() == "market" ? MARKET :
-                    j["type"].get<std::string>() == "limit" ? LIMIT : 
-                    j["type"].get<std::string>() == "stop" ? STOP : 
-                    j["type"].get<std::string>() == "stop_limit" ? STOP_LIMIT : 
-                    j["type"].get<std::string>() == "trailing_stop" ? TRAILING_STOP : MARKET),
-        side(j["side"].get<std::string>() == "buy" ? BUY : SELL),
-        position_intent(j["position_intent"].get<std::string>() == "buy_to_open" ? BUY_TO_OPEN : 
-                        j["position_intent"].get<std::string>() == "buy_to_close" ? BUY_TO_CLOSE : 
-                        j["position_intent"].get<std::string>() == "sell_to_open" ? SELL_TO_OPEN : 
-                        j["position_intent"].get<std::string>() == "sell_to_close" ? SELL_TO_CLOSE : BUY_TO_OPEN),
-        time_in_force(j["time_in_force"].get<std::string>() == "day" ? DAY :
-                    j["time_in_force"].get<std::string>() == "gtc" ? GTC : 
-                    j["time_in_force"].get<std::string>() == "opg" ? OPG : 
-                    j["time_in_force"].get<std::string>() == "cls" ? CLS : 
-                    j["time_in_force"].get<std::string>() == "ioc" ? IOC : FOK),
-        limit_price(j["limit_price"].get<double>()),
-        stop_price(j["stop_price"].get<double>()),
-        status(j["status"].get<std::string>()),
-        extended_hours(j["extended_hours"].get<bool>()),
-        //legs(),
-        trail_percent(j["trail_percent"].get<double>()),
-        trail_price(j["trail_price"].get<double>()),
-        hwm(j["hwm"].get<double>())
+        id(parse_string(j, "id")),
+        client_order_id(parse_string(j, "client_order_id")),
+        created_at(parse_datetime(j, "created_at")),
+        updated_at(parse_datetime(j, "updated_at")),
+        submitted_at(parse_datetime(j, "submitted_at")),
+        filled_at(parse_datetime(j, "filled_at")),
+        expired_at(parse_datetime(j, "expired_at")),
+        canceled_at(parse_datetime(j, "canceled_at")),
+        failed_at(parse_datetime(j, "failed_at")),
+        replaced_at(parse_datetime(j, "replaced_at")),
+        replaced_by(parse_string(j, "replaced_by")),
+        replaces(parse_string(j, "replaces")),
+        asset_id(parse_string(j, "asset_id")),
+        symbol(parse_string(j, "symbol")),
+        asset_class(string_to_asset_class(parse_string(j, "asset_class"))),
+        notional(parse_decimal(j, "notional")),
+        qty(parse_decimal(j, "qty")),
+        filled_qty(parse_decimal(j, "filled_qty")),
+        filled_avg_price(parse_decimal(j, "filled_avg_price")),
+        order_class(string_to_order_class(parse_string(j, "order_class"))),
+        type(string_to_order_type(parse_string(j, "type"))),
+        side(string_to_order_side(parse_string(j, "side"))),
+        position_intent(string_to_position_intent(parse_string(j, "position_intent"))),
+        time_in_force(string_to_time_in_force(parse_string(j, "time_in_force"))),
+        limit_price(parse_decimal(j, "limit_price")),
+        stop_price(parse_decimal(j, "stop_price")),
+        status(parse_string(j, "status")),
+        extended_hours(parse_bool(j, "extended_hours")),
+        trail_percent(parse_decimal(j, "trail_percent")),
+        trail_price(parse_decimal(j, "trail_price")),
+        hwm(parse_decimal(j, "hwm"))
     {
-        // Parse legs
-        if (j.contains("legs")) {
+        if (j.contains("legs") && !j["legs"].is_null()) {
             for (const auto& leg : j["legs"]) {
-                legs.push_back(OrderResponse(leg));
+                legs.emplace_back(leg);
             }
         }
     }
@@ -578,31 +529,16 @@ struct OrderResponse {
         j["replaces"] = replaces;
         j["asset_id"] = asset_id;
         j["symbol"] = symbol;
-        j["asset_class"] = asset_class == US_EQUITY ? "us_equity" : 
-                           asset_class == US_OPTION ? "us_option" : "crypto";
+        j["asset_class"] = asset_class_to_string(asset_class);
         j["notional"] = notional;
         j["qty"] = qty;
         j["filled_qty"] = filled_qty;
         j["filled_avg_price"] = filled_avg_price;
-        j["order_class"] = order_class == SIMPLE ? "simple" : 
-                           order_class == OCO ? "oco" : 
-                           order_class == BRACKET ? "bracket" : 
-                           order_class == MLEG ? "mleg" : "oto";
-        j["type"] = type == MARKET ? "market" :
-                    type == LIMIT ? "limit" : 
-                    type == STOP ? "stop" : 
-                    type == STOP_LIMIT ? "stop_limit" : 
-                    type == TRAILING_STOP ? "trailing_stop" : "unknown";
-        j["side"] = side == BUY ? "buy" : "sell";
-        j["position_intent"] = position_intent == BUY_TO_OPEN ? "buy_to_open" : 
-                               position_intent == BUY_TO_CLOSE ? "buy_to_close" : 
-                               position_intent == SELL_TO_OPEN ? "sell_to_open" : 
-                               position_intent == SELL_TO_CLOSE ? "sell_to_close" : "unknown";
-        j["time_in_force"] = time_in_force == DAY ? "day" :
-                             time_in_force == GTC ? "gtc" : 
-                             time_in_force == OPG ? "opg" :
-                             time_in_force == CLS ? "cls" :
-                             time_in_force == IOC ? "ioc" : "fok";
+        j["order_class"] = order_class_to_string(order_class);
+        j["type"] = order_type_to_string(type);
+        j["side"] = order_side_to_string(side);
+        j["position_intent"] = position_intent_to_string(position_intent);
+        j["time_in_force"] = time_in_force_to_string(time_in_force);
         j["limit_price"] = limit_price;
         j["stop_price"] = stop_price;
         j["status"] = status;

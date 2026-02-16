@@ -106,7 +106,18 @@ nlohmann::json HttpClient::do_request(http::request<http::string_body> req) {
     stream.shutdown(ec);
 
     // Parse the JSON from the response body
-    return nlohmann::json::parse(beast::buffers_to_string(res.body().data()));
+    auto body_str = beast::buffers_to_string(res.body().data());
+    
+    // Check for HTTP errors
+    if (res.result() != http::status::ok && res.result() != http::status::no_content) {
+        std::string error_msg = "HTTP " + std::to_string(res.result_int()) + ": " + body_str;
+        throw std::runtime_error(error_msg);
+    }
+    
+    if (body_str.empty()) {
+        return nlohmann::json::object();  // Return empty JSON object for 204 No Content
+    }
+    return nlohmann::json::parse(body_str);
 }
 
 

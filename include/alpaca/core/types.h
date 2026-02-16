@@ -102,4 +102,41 @@ enum Exchange {
     OTC
 };
 
+enum OrderSide {
+    BUY,
+    SELL
+};
+
+enum OrderType {
+    MARKET,
+    LIMIT, 
+    STOP,
+    STOP_LIMIT,
+    TRAILING_STOP
+};
+
+enum OrderTimeInForce {
+    DAY,
+    GTC,
+    OPG, 
+    CLS, 
+    IOC,
+    FOK,
+};
+
+enum OrderClass {
+    SIMPLE, 
+    BRACKET, 
+    OCO,
+    OTO,
+    MLEG
+};
+
+enum PositionIntent {
+    BUY_TO_OPEN,
+    BUY_TO_CLOSE,
+    SELL_TO_OPEN,
+    SELL_TO_CLOSE
+};
+
 } // namespace alpaca

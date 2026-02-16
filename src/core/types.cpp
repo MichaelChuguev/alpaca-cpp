@@ -69,18 +69,36 @@ void DateTime::parse_iso_datetime(const std::string& str, sys_time& tp, std::opt
     // Parse time (HH:MM:SS.FFFFFF)
     if (sep == 'T') {
         int h, m, s = 0;
-        double subsec = 0.0;
         char colon1, colon2;
 
         iss >> h >> colon1 >> m >> colon2 >> s;
+        
+        // Parse fractional seconds if present
         if (iss.peek() == '.') {
-            iss >> sep >> subsec; // sep is now '.'
+            iss.ignore(); // skip the '.'
+            std::string subsec_str;
+            while (std::isdigit(iss.peek())) {
+                subsec_str += iss.get();
+            }
+            // Convert fractional string to microseconds
+            // "123456" -> 0.123456 seconds -> 123456 microseconds
+            if (!subsec_str.empty()) {
+                double fraction = std::stod("0." + subsec_str);
+                us = std::chrono::hours(h) + 
+                     std::chrono::minutes(m) + 
+                     std::chrono::seconds(s) +
+                     std::chrono::round<std::chrono::microseconds>(
+                         std::chrono::duration<double>(fraction));
+            } else {
+                us = std::chrono::hours(h) + 
+                     std::chrono::minutes(m) + 
+                     std::chrono::seconds(s);
+            }
+        } else {
+            us = std::chrono::hours(h) + 
+                 std::chrono::minutes(m) + 
+                 std::chrono::seconds(s);
         }
-        us = std::chrono::hours(h) + 
-        std::chrono::minutes(m) + 
-        std::chrono::seconds(s) +
-        std::chrono::round<std::chrono::microseconds>(
-        std::chrono::duration<double>(subsec));
     }
 
     // Parse timezone (Z or ±HH:MM)

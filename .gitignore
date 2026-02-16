@@ -1,5 +1,7 @@
 # Build directories
 build/
+example/build/
+cmake-build-*/
 out/
 
 # IDE / Editor
@@ -40,6 +42,8 @@ conan/
 
 # Personal / local notes
 build.txt
+project_report.txt
+roadmap.txt
 
 # Environment
 .env

@@ -35,7 +35,7 @@ struct Watchlist {
         }
     }
 
-    std::string toString() const {
+    std::string to_string() const {
         std::ostringstream oss;
         oss << "Watchlist:\n"
             << "ID: " << id << "\n"
@@ -50,6 +50,20 @@ struct Watchlist {
         oss << "}";
         return oss.str();
     }
+
+    json to_json() const {
+        json j;
+        j["id"] = id;
+        j["account_id"] = account_id;
+        j["created_at"] = created_at.to_string();
+        j["updated_at"] = updated_at.to_string();
+        j["name"] = name;
+        j["assets"] = json::array();
+        for (const auto& a : assets) {
+            j["assets"].push_back(a.to_json());
+        }
+        return j;
+    }
 };
 
-}
+} // namespace alpaca

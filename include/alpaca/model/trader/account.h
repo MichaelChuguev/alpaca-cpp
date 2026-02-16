@@ -103,9 +103,7 @@ struct Account {
     {
     }
 
-    /**
-     * 
-     */
+
     std::string to_string() const {
         std::ostringstream oss;
         oss << "Account Information:\n"
@@ -214,14 +212,8 @@ struct AccountConfig {
     std::string pdt_check;
     bool ptp_no_exception_entry;
 
-    /**
-     * Default constructor
-     */
     AccountConfig() = default;
 
-    /**
-     * 
-     */
     AccountConfig(const std::string& dtbp_check, const std::string& trade_confirm_email, const bool& suspend_trade, const bool& no_shorting,
         const bool& fractional_trading, const int& max_margin_multiplier, const int& max_options_trading_level,
         const std::string& pdt_check, const bool& ptp_no_exception_entry)
@@ -238,9 +230,6 @@ struct AccountConfig {
     {
     }
 
-    /**
-     * 
-     */
     AccountConfig(const json& j) {
         dtbp_check = j["dtbp_check"].get<std::string>();
         trade_confirm_email = j["trade_confirm_email"].get<std::string>();
@@ -253,9 +242,6 @@ struct AccountConfig {
         ptp_no_exception_entry = j["ptp_no_exception_entry"].get<bool>();
     }
 
-    /**
-     * 
-     */
     std::string to_string() const {
         std::ostringstream oss;
         oss << "Account Configuration:\n"
@@ -272,9 +258,6 @@ struct AccountConfig {
         return oss.str();
     }
 
-    /**
-     * 
-     */
     json to_json() const {
         validate();
         json j;

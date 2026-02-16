@@ -32,7 +32,7 @@ struct Calendar {
         {
         }
 
-        std::string toString() const {
+        std::string to_string() const {
             std::ostringstream oss;
             oss << "Calendar Day:\n"
                 << "Date: " << date.to_string() << "\n"
@@ -50,14 +50,13 @@ struct Calendar {
 
     Calendar(const json& j) {
         for (const auto& item : j) {
-            SingleCalendarDay day(item);
-            calendarDays.push_back(day);
+            calendarDays.emplace_back(item);
         }
     }
 
-    std::string toString() const {
+    std::string to_string() const {
         std::ostringstream oss;
-        for (const auto& day : calendarDays) oss << day.toString() << "\n";
+        for (const auto& day : calendarDays) oss << day.to_string() << "\n";
         return oss.str();
     }
 };

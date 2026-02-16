@@ -3,7 +3,6 @@ add_library(alpaca-cpp
     api/rest/HTTPClient.cpp
     trader/AlpacaTraderAPI.cpp
     core/types.cpp
-    data/stocks.cpp
 )
 
 
@@ -17,7 +16,7 @@ target_include_directories(alpaca-cpp
 )
 
 target_link_libraries(alpaca-cpp
-    PRIVATE
+    PUBLIC
         Boost::boost
         CURL::libcurl
         OpenSSL::SSL
