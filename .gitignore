@@ -1,0 +1,46 @@
+# Build directories
+build/
+out/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Compiled objects
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.lib
+*.dll
+*.exe
+
+# CMake generated
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+install_manifest.txt
+CTestTestfile.cmake
+Testing/
+Makefile
+
+# Package managers
+vcpkg_installed/
+conan/
+
+# Personal / local notes
+build.txt
+
+# Environment
+.env
+.env.*
