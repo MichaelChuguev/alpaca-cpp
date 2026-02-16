@@ -17,6 +17,9 @@
 #include "alpaca/model/trader/position.h"
 #include "alpaca/model/trader/portfolio.h"
 #include "alpaca/model/trader/watchlist.h"
+#include "alpaca/model/trader/calendar.h"
+#include "alpaca/model/trader/clock.h"
+#include "alpaca/model/trader/wallet.h"
 
 namespace alpaca {
 
@@ -154,7 +157,7 @@ class AlpacaTraderAPI {
     /**
      * 
      */
-    Order close_position(const std::string& symbol_id, const double& qty = 0.0, const double& percentage = 0.0);
+    OrderResponse close_position(const std::string& symbol_id, const double& qty = 0.0, const double& percentage = 0.0);
 
     /**
      * 
@@ -180,6 +183,126 @@ class AlpacaTraderAPI {
      * 
      */
     Watchlist get_watchlist_by_id(const std::string& id);
+
+    /**
+     * 
+     */
+    Watchlist update_watchlist(const std::string& id, const std::string& name, const std::vector<std::string>& symbols);
+
+    /**
+     * 
+     */
+    Watchlist add_asset_to_watchlist(const std::string& id, const std::string& symbol);
+
+    /**
+     * 
+     */
+    void delete_watchlist(const std::string& id);
+
+    /**
+     * 
+     */
+    Watchlist get_watchlist_by_name(const std::string& name);
+
+    /**
+     * 
+     */
+    Watchlist update_watchlist_by_name(const std::string& name, const std::vector<std::string>& symbols);
+
+    /**
+     * 
+     */
+    Watchlist add_asset_to_watchlist_by_name(const std::string& name, const std::string& symbol);
+
+    /**
+     * 
+     */
+    void delete_watchlist_by_name(const std::string& name);
+
+    /**
+     * 
+     */
+    Watchlist remove_asset_from_watchlist(const std::string& id, const std::string& symbol);
+
+    /**
+     * 
+     */
+    AccountConfig get_account_config();
+
+    /**
+     * 
+     */
+    std::vector<AccountActivity> get_account_activities(const DateTime& after = DateTime(), const DateTime& until = DateTime(), const Sort& direction = Sort::DESC, const int& page_size = 100, const std::string& page_token = "", const std::string& category = "");
+
+    /**
+     * 
+     */
+    std::vector<AccountActivity> get_account_activities_by_type(const std::string& activity_type, const DateTime& after = DateTime(), const DateTime& until = DateTime(), const Sort& direction = Sort::DESC, const int& page_size = 100, const std::string& page_token = "");
+
+    /**
+     * 
+     */
+    Calendar get_calendar(const DateTime& start = DateTime(), const DateTime& end = DateTime());
+
+    /**
+     * 
+     */
+    Clock get_clock();
+
+    /**
+     * 
+     */
+    Calendar get_calendar_v3(const std::string& market, const DateTime& start = DateTime(), const DateTime& end = DateTime());
+
+    /**
+     * 
+     */
+    Clock get_clock_v3();
+
+    /**
+     * 
+     */
+    std::vector<CryptoWallet> get_crypto_wallets();
+
+    /**
+     * 
+     */
+    std::vector<CryptoTransfer> get_crypto_transfers(const std::string& asset = "");
+
+    /**
+     * 
+     */
+    CryptoTransfer create_crypto_transfer(const CryptoTransferRequest& request);
+
+    /**
+     * 
+     */
+    CryptoTransfer get_crypto_transfer(const std::string& transfer_id);
+
+    /**
+     * 
+     */
+    std::vector<WhitelistedAddress> get_whitelisted_addresses();
+
+    /**
+     * 
+     */
+    WhitelistedAddress create_whitelisted_address(const WhitelistedAddressRequest& request);
+
+    /**
+     * 
+     */
+    void delete_whitelisted_address(const std::string& whitelisted_address_id);
+
+    /**
+     * 
+     */
+    CryptoTransferEstimate get_crypto_transfer_estimate(const std::string& asset, const std::string& network = "", const double& amount = 0.0);
+
+    /**
+     * 
+     */
+    void do_not_exercise_option(const std::string& symbol_contract_id);
 
     /**
      * 

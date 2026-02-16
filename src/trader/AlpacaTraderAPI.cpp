@@ -232,7 +232,7 @@ OrderResponse AlpacaTraderAPI::get_order_by_client_order_id(const std::string& c
     }
 }
 
-OrderResponse AlpacaTraderAPI::get_order_by_id(const std::string& order_id, const bool& nested = false) {
+OrderResponse AlpacaTraderAPI::get_order_by_id(const std::string& order_id, const bool& nested) {
     try {
         std::string query = "/v2/orders/" + order_id;
         if (nested) query += "?nested=true";
@@ -297,6 +297,357 @@ std::vector<Position> AlpacaTraderAPI::get_all_positions() {
     } 
 }
 
+std::vector<PositionClosed> AlpacaTraderAPI::close_all_positions(const bool& cancel_orders) {
+    try {
+        std::string query = "/v2/positions";
+        if (cancel_orders) query += "?cancel_orders=true";
+        json j = httpClient.del(query);
+        std::vector<PositionClosed> closed;
+        for (const auto& pos : j) {
+            closed.push_back(PositionClosed(pos));
+        }
+        return closed;
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
 
+Position AlpacaTraderAPI::get_open_position(const std::string& symbol_id) {
+    try {
+        return Position(httpClient.get("/v2/positions/" + symbol_id));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+OrderResponse AlpacaTraderAPI::close_position(const std::string& symbol_id, const double& qty, const double& percentage) {
+    try {
+        std::string query = "/v2/positions/" + symbol_id + "?";
+        if (qty > 0) query += "qty=" + std::to_string(qty) + "&";
+        if (percentage > 0) query += "percentage=" + std::to_string(percentage) + "&";
+        if (query.back() == '&' || query.back() == '?') query.pop_back();
+        return OrderResponse(httpClient.del(query));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+void AlpacaTraderAPI::exercise_option(const std::string& symbol_contract_id) {
+    try {
+        httpClient.post("/v2/positions/" + symbol_contract_id + "/exercise", json::object());
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+PortfolioHistory AlpacaTraderAPI::get_portfolio_history(const std::string& period, const std::string& timeframe, const IntradayReporting& reporting, const DateTime& start, const PnlReset& reset, const DateTime& end, const std::string& cashflow_types) {
+    try {
+        std::string query = "/v2/account/portfolio/history?";
+        if (!period.empty()) query += "period=" + period + "&";
+        if (!timeframe.empty()) query += "timeframe=" + timeframe + "&";
+        if (reporting == IntradayReporting::MARKET_HOURS) query += "intraday_reporting=market_hours&";
+        else if (reporting == IntradayReporting::EXTENDED_HOURS) query += "intraday_reporting=extended_hours&";
+        else if (reporting == IntradayReporting::CONTINUOUS) query += "intraday_reporting=continuous&";
+        if (start.is_date_only()) query += "start=" + start.to_iso_string() + "&";
+        if (end.is_date_only()) query += "end=" + end.to_iso_string() + "&";
+        if (reset == PnlReset::PER_DAY) query += "pnl_reset=per_day&";
+        else if (reset == PnlReset::NO_RESET) query += "pnl_reset=no_reset&";
+        if (!cashflow_types.empty()) query += "cashflow_types=" + cashflow_types + "&";
+        if (query.back() == '&' || query.back() == '?') query.pop_back();
+        return PortfolioHistory(httpClient.get(query));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+std::vector<Watchlist> AlpacaTraderAPI::get_all_watchlists() {
+    try {
+        json j = httpClient.get("/v2/watchlists");
+        std::vector<Watchlist> watchlists;
+        for (const auto& wl : j) {
+            watchlists.push_back(Watchlist(wl));
+        }
+        return watchlists;
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+Watchlist AlpacaTraderAPI::create_watchlist(const std::string& name, const std::vector<std::string>& symbols) {
+    try {
+        json body;
+        body["name"] = name;
+        body["symbols"] = symbols;
+        return Watchlist(httpClient.post("/v2/watchlists", body));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+Watchlist AlpacaTraderAPI::get_watchlist_by_id(const std::string& id) {
+    try {
+        return Watchlist(httpClient.get("/v2/watchlists/" + id));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+Watchlist AlpacaTraderAPI::update_watchlist(const std::string& id, const std::string& name, const std::vector<std::string>& symbols) {
+    try {
+        json body;
+        body["name"] = name;
+        body["symbols"] = symbols;
+        return Watchlist(httpClient.put("/v2/watchlists/" + id, body));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+Watchlist AlpacaTraderAPI::add_asset_to_watchlist(const std::string& id, const std::string& symbol) {
+    try {
+        json body;
+        body["symbol"] = symbol;
+        return Watchlist(httpClient.post("/v2/watchlists/" + id, body));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+void AlpacaTraderAPI::delete_watchlist(const std::string& id) {
+    try {
+        httpClient.del("/v2/watchlists/" + id);
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+Watchlist AlpacaTraderAPI::get_watchlist_by_name(const std::string& name) {
+    try {
+        return Watchlist(httpClient.get("/v2/watchlists:by_name?name=" + name));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+Watchlist AlpacaTraderAPI::update_watchlist_by_name(const std::string& name, const std::vector<std::string>& symbols) {
+    try {
+        json body;
+        body["name"] = name;
+        body["symbols"] = symbols;
+        return Watchlist(httpClient.put("/v2/watchlists:by_name", body));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+Watchlist AlpacaTraderAPI::add_asset_to_watchlist_by_name(const std::string& name, const std::string& symbol) {
+    try {
+        json body;
+        body["name"] = name;
+        body["symbol"] = symbol;
+        return Watchlist(httpClient.post("/v2/watchlists:by_name", body));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+void AlpacaTraderAPI::delete_watchlist_by_name(const std::string& name) {
+    try {
+        httpClient.del("/v2/watchlists:by_name?name=" + name);
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+Watchlist AlpacaTraderAPI::remove_asset_from_watchlist(const std::string& id, const std::string& symbol) {
+    try {
+        return Watchlist(httpClient.del("/v2/watchlists/" + id + "/" + symbol));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+AccountConfig AlpacaTraderAPI::get_account_config() {
+    try {
+        return AccountConfig(httpClient.get("/v2/account/configurations"));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+std::vector<AccountActivity> AlpacaTraderAPI::get_account_activities(const DateTime& after, const DateTime& until, const Sort& direction, const int& page_size, const std::string& page_token, const std::string& category) {
+    try {
+        std::string query = "/v2/account/activities?";
+        if (after.is_date_only()) query += "after=" + after.to_iso_string() + "&";
+        if (until.is_date_only()) query += "until=" + until.to_iso_string() + "&";
+        if (direction == Sort::ASC) query += "direction=asc&";
+        else if (direction == Sort::DESC) query += "direction=desc&";
+        if (page_size > 0) query += "page_size=" + std::to_string(page_size) + "&";
+        if (!page_token.empty()) query += "page_token=" + page_token + "&";
+        if (!category.empty()) query += "category=" + category + "&";
+        if (query.back() == '&' || query.back() == '?') query.pop_back();
+        json j = httpClient.get(query);
+        std::vector<AccountActivity> activities;
+        for (const auto& act : j) {
+            activities.push_back(AccountActivity(act));
+        }
+        return activities;
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+std::vector<AccountActivity> AlpacaTraderAPI::get_account_activities_by_type(const std::string& activity_type, const DateTime& after, const DateTime& until, const Sort& direction, const int& page_size, const std::string& page_token) {
+    try {
+        std::string query = "/v2/account/activities/" + activity_type + "?";
+        if (after.is_date_only()) query += "after=" + after.to_iso_string() + "&";
+        if (until.is_date_only()) query += "until=" + until.to_iso_string() + "&";
+        if (direction == Sort::ASC) query += "direction=asc&";
+        else if (direction == Sort::DESC) query += "direction=desc&";
+        if (page_size > 0) query += "page_size=" + std::to_string(page_size) + "&";
+        if (!page_token.empty()) query += "page_token=" + page_token + "&";
+        if (query.back() == '&' || query.back() == '?') query.pop_back();
+        json j = httpClient.get(query);
+        std::vector<AccountActivity> activities;
+        for (const auto& act : j) {
+            activities.push_back(AccountActivity(act));
+        }
+        return activities;
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+Calendar AlpacaTraderAPI::get_calendar(const DateTime& start, const DateTime& end) {
+    try {
+        std::string query = "/v2/calendar?";
+        if (start.is_date_only()) query += "start=" + start.to_iso_string() + "&";
+        if (end.is_date_only()) query += "end=" + end.to_iso_string() + "&";
+        if (query.back() == '&' || query.back() == '?') query.pop_back();
+        return Calendar(httpClient.get(query));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+Clock AlpacaTraderAPI::get_clock() {
+    try {
+        return Clock(httpClient.get("/v2/clock"));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+Calendar AlpacaTraderAPI::get_calendar_v3(const std::string& market, const DateTime& start, const DateTime& end) {
+    try {
+        std::string query = "/v3/calendar/" + market + "?";
+        if (start.is_date_only()) query += "start=" + start.to_iso_string() + "&";
+        if (end.is_date_only()) query += "end=" + end.to_iso_string() + "&";
+        if (query.back() == '&' || query.back() == '?') query.pop_back();
+        return Calendar(httpClient.get(query));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+Clock AlpacaTraderAPI::get_clock_v3() {
+    try {
+        return Clock(httpClient.get("/v3/clock"));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+std::vector<CryptoWallet> AlpacaTraderAPI::get_crypto_wallets() {
+    try {
+        json j = httpClient.get("/v2/wallets");
+        std::vector<CryptoWallet> wallets;
+        for (const auto& w : j) {
+            wallets.push_back(CryptoWallet(w));
+        }
+        return wallets;
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+std::vector<CryptoTransfer> AlpacaTraderAPI::get_crypto_transfers(const std::string& asset) {
+    try {
+        std::string query = "/v2/wallets/transfers";
+        if (!asset.empty()) query += "?asset=" + asset;
+        json j = httpClient.get(query);
+        std::vector<CryptoTransfer> transfers;
+        for (const auto& t : j) {
+            transfers.push_back(CryptoTransfer(t));
+        }
+        return transfers;
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+CryptoTransfer AlpacaTraderAPI::create_crypto_transfer(const CryptoTransferRequest& request) {
+    try {
+        return CryptoTransfer(httpClient.post("/v2/wallets/transfers", request.to_json()));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+CryptoTransfer AlpacaTraderAPI::get_crypto_transfer(const std::string& transfer_id) {
+    try {
+        return CryptoTransfer(httpClient.get("/v2/wallets/transfers/" + transfer_id));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+std::vector<WhitelistedAddress> AlpacaTraderAPI::get_whitelisted_addresses() {
+    try {
+        json j = httpClient.get("/v2/wallets/whitelists");
+        std::vector<WhitelistedAddress> addresses;
+        for (const auto& a : j) {
+            addresses.push_back(WhitelistedAddress(a));
+        }
+        return addresses;
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+WhitelistedAddress AlpacaTraderAPI::create_whitelisted_address(const WhitelistedAddressRequest& request) {
+    try {
+        return WhitelistedAddress(httpClient.post("/v2/wallets/whitelists", request.to_json()));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+void AlpacaTraderAPI::delete_whitelisted_address(const std::string& whitelisted_address_id) {
+    try {
+        httpClient.del("/v2/wallets/whitelists/" + whitelisted_address_id);
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+CryptoTransferEstimate AlpacaTraderAPI::get_crypto_transfer_estimate(const std::string& asset, const std::string& network, const double& amount) {
+    try {
+        std::string query = "/v2/wallets/fees/estimate?asset=" + asset;
+        if (!network.empty()) query += "&network=" + network;
+        if (amount > 0) query += "&amount=" + std::to_string(amount);
+        return CryptoTransferEstimate(httpClient.get(query));
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
+
+void AlpacaTraderAPI::do_not_exercise_option(const std::string& symbol_contract_id) {
+    try {
+        httpClient.post("/v2/positions/" + symbol_contract_id + "/do-not-exercise", json::object());
+    } catch (const AlpacaTraderException& e) {
+        std::cerr << "Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    }
+}
 
 } // namespace alpaca
