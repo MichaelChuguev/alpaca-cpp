@@ -14,7 +14,10 @@ namespace alpaca {
         brokerAPIKey(""), // Not used in this constructor
         brokerAPISecret(""), // Not used in this constructor
         brokerAPIEndpoint(SANDBOX), // Default value (unused)
-        trader(traderKeyID, traderKeySecret, traderAPIEndpoint)
+        trader(traderKeyID, traderKeySecret, traderAPIEndpoint),
+        updatesStream(std::make_unique<AlpacaUpdatesStream>(traderKeyID, traderKeySecret, traderAPIEndpoint)),
+        marketDataStream(std::make_unique<AlpacaMarketDataStream>(traderKeyID, traderKeySecret,
+            marketDataWebsocketSource == SIP ? MarketDataFeed::SIP_FEED : MarketDataFeed::IEX_FEED))
     {
     }
 

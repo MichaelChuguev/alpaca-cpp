@@ -1,10 +1,13 @@
 #pragma once
 
 #include <string>
+#include <memory>
 
 #include "alpaca/api/rest/HTTPClient.h"
 #include "alpaca/core/types.h"
 #include "alpaca/api/rest/trader/AlpacaTraderAPI.h"
+#include "alpaca/api/websocket/AlpacaUpdatesStream.h"
+#include "alpaca/api/websocket/AlpacaMarketDataStream.h"
 
 namespace alpaca {
 
@@ -23,14 +26,8 @@ class AlpacaAPI {
     const std::string brokerAPISecret;
     const BrokerAPIEndpoint brokerAPIEndpoint;
 
-
     //AlpacaMarketDataAPI marketData;
     //AlpacaBrokerAPI broker;
-    
-    //UpdatesWebSocket updatesWebSocket;
-    //StockMarketDataWebSocket stockMarketDataWebSocket;
-    //CryptoMarketDataWebSocket cryptoMarketDataWebSocket;
-    //NewsMarketDataWebSocket newsMarketDataWebSocket;
 
 
     public:
@@ -80,6 +77,14 @@ class AlpacaAPI {
     AlpacaAPI(const std::string& traderKeyID, const std::string& traderKeySecret, const TraderAPIEndpoint& traderAPIEndpoint, const MarketDataWebsocketSource& marketDataWebsocketSource, const std::string& brokerAPIKey, const std::string& brokerAPISecret, const BrokerAPIEndpoint& brokerAPIEndpoint);
 
     AlpacaTraderAPI trader;
+
+    /// WebSocket stream for trade / order updates (binary frames).
+    /// Available when constructed with trader API keys.
+    std::unique_ptr<AlpacaUpdatesStream> updatesStream;
+
+    /// WebSocket stream for real-time market data — trades, quotes, bars (text frames).
+    /// Available when constructed with trader API keys and a market-data source.
+    std::unique_ptr<AlpacaMarketDataStream> marketDataStream;
 
 };
 

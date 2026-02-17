@@ -23,3 +23,6 @@ target_link_libraries(watchlist_example PRIVATE alpaca::alpaca-cpp)
 
 add_executable(crypto_example crypto_example.cpp)
 target_link_libraries(crypto_example PRIVATE alpaca::alpaca-cpp)
+
+add_executable(websocket_example websocket_example.cpp)
+target_link_libraries(websocket_example PRIVATE alpaca::alpaca-cpp)
