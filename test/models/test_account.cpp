@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <iostream>
 #include "nlohmann/json.hpp"
 #include "alpaca/model/trader/account.h"
 
@@ -54,8 +55,25 @@ json make_account_json() {
 } // anonymous namespace
 
 TEST(AccountTest, ParseFromJson) {
+    std::cout << "\n=== Test: AccountTest::ParseFromJson ===" << std::endl;
+    std::cout << "Testing: GET /v2/account - Parse account response from JSON" << std::endl;
+
     json j = make_account_json();
     Account account(j);
+
+    std::cout << "Response:" << std::endl;
+    std::cout << "  ID: " << account.id << std::endl;
+    std::cout << "  Account Number: " << account.account_number << std::endl;
+    std::cout << "  Status: " << account.status << std::endl;
+    std::cout << "  Crypto Status: " << account.crypto_status << std::endl;
+    std::cout << "  Currency: " << account.currency << std::endl;
+    std::cout << "  Buying Power: " << account.buying_power << std::endl;
+    std::cout << "  Cash: " << account.cash << std::endl;
+    std::cout << "  Equity: " << account.equity << std::endl;
+    std::cout << "  Portfolio Value: " << account.portfolio_value << std::endl;
+    std::cout << "  Pattern Day Trader: " << (account.pattern_day_trader ? "true" : "false") << std::endl;
+    std::cout << "  Shorting Enabled: " << (account.shorting_enabled ? "true" : "false") << std::endl;
+    std::cout << "  Daytrade Count: " << account.daytrade_count << std::endl;
 
     EXPECT_EQ(account.id, "904837e3-3b76-47ec-b432-046db621571b");
     EXPECT_EQ(account.account_number, "010203ABCD");
@@ -95,12 +113,23 @@ TEST(AccountTest, ParseFromJson) {
     EXPECT_EQ(account.crypto_tier, 1);
     EXPECT_DOUBLE_EQ(account.intraday_adjustments, 0.00);
     EXPECT_DOUBLE_EQ(account.pending_reg_taf_fees, 0.00);
+
+    std::cout << "PASSED" << std::endl;
 }
 
 TEST(AccountTest, ToJson) {
+    std::cout << "\n=== Test: AccountTest::ToJson ===" << std::endl;
+    std::cout << "Testing: Account model to_json() serialization" << std::endl;
+
     json j = make_account_json();
     Account account(j);
     json result = account.to_json();
+
+    std::cout << "Response JSON (partial):" << std::endl;
+    std::cout << "  id: " << result["id"] << std::endl;
+    std::cout << "  account_number: " << result["account_number"] << std::endl;
+    std::cout << "  status: " << result["status"] << std::endl;
+    std::cout << "  currency: " << result["currency"] << std::endl;
 
     EXPECT_EQ(result["id"], "904837e3-3b76-47ec-b432-046db621571b");
     EXPECT_EQ(result["account_number"], "010203ABCD");
@@ -108,14 +137,23 @@ TEST(AccountTest, ToJson) {
     EXPECT_EQ(result["currency"], "USD");
     EXPECT_FALSE(result["pattern_day_trader"].get<bool>());
     EXPECT_TRUE(result["shorting_enabled"].get<bool>());
+
+    std::cout << "PASSED" << std::endl;
 }
 
 TEST(AccountTest, ToString) {
+    std::cout << "\n=== Test: AccountTest::ToString ===" << std::endl;
+    std::cout << "Testing: Account model to_string() output" << std::endl;
+
     json j = make_account_json();
     Account account(j);
     std::string str = account.to_string();
 
+    std::cout << "Response:\n" << str << std::endl;
+
     EXPECT_NE(str.find("Account Information:"), std::string::npos);
     EXPECT_NE(str.find("010203ABCD"), std::string::npos);
     EXPECT_NE(str.find("ACTIVE"), std::string::npos);
+
+    std::cout << "PASSED" << std::endl;
 }

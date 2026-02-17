@@ -48,6 +48,14 @@ int main() {
             }
         }
 
+        // Get all assets
+        std::cout << "\n=== All Assets ===" << std::endl;
+        auto assets = api.get_assets();
+        for (const auto& asset : assets) {
+            std::cout << asset.id << " " << asset.symbol << " - " << asset.name << " (" << asset.status << ") " << asset.asset_class << std::endl;
+        }
+
+
     } catch (const alpaca::AlpacaTraderException& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;

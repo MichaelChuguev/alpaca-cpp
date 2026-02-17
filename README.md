@@ -60,16 +60,39 @@ target_link_libraries(your_target PRIVATE alpaca::alpaca-cpp)
 
 ## Quick start
 
+### Setting up credentials
+
+1. Get your Trading API keys from [Alpaca Markets](https://app.alpaca.markets/paper/dashboard/overview)
+2. Set up environment variables:
+
+```bash
+# Copy the example file
+cp .env.example .env
+
+# Edit .env with your actual credentials
+# Then source it:
+source .env
+```
+
+Or export them directly:
+
+```bash
+export ALPACA_API_KEY="your-api-key"
+export ALPACA_SECRET_KEY="your-secret-key"
+```
+
+### Example usage
+
 ```cpp
 #include <alpaca/alpacaAPI.h>
 #include <alpaca/api/rest/trader/AlpacaTraderAPI.h>
 
 int main() {
-    alpaca::AlpacaTraderAPI api(
-        "YOUR_KEY_ID",
-        "YOUR_SECRET_KEY",
-        alpaca::TraderAPIEndpoint::PAPER
-    );
+    // Use environment variables for credentials
+    const char* key = std::getenv("ALPACA_API_KEY");
+    const char* secret = std::getenv("ALPACA_SECRET_KEY");
+
+    alpaca::AlpacaTraderAPI api(key, secret, alpaca::TraderAPIEndpoint::PAPER);
 
     // Get account info
     auto account = api.get_account();
@@ -160,6 +183,36 @@ int main() {
 | `delete_whitelisted_address()` | Remove a whitelisted address |
 | `get_crypto_transfer_estimate()` | Estimate transfer fees |
 
+## Testing
+
+The project includes 190 comprehensive tests covering all Trading API endpoints and WebSocket streams.
+
+### Running tests
+
+```bash
+# Build the project with tests enabled (default)
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build
+
+# Run all tests
+./build/test/alpaca-tests
+
+# Run with CTest
+cd build && ctest --output-on-failure
+
+# Run specific test suite
+./build/test/alpaca-tests --gtest_filter="OrderTest.*"
+```
+
+### Test coverage
+
+- **Model tests**: Account, Order, Position, Portfolio, Asset, Watchlist, Activity, Calendar, Clock, Option, Treasury, Wallet
+- **API tests**: URL construction, JSON body building, response parsing, enum mappings  
+- **Stream tests**: StreamTrade, StreamQuote, StreamBar, TradeUpdate, WebSocket protocol messages
+- **47 Trading API endpoints** fully tested across 11 categories
+
+Each test includes console output showing endpoint, request/response data, and validation status.
+
 ## Project structure
 
 ```
@@ -173,6 +226,36 @@ test/                   Test suite (Google Test)
 example/                Example programs
 cmake/                  CMake package config
 ```
+
+## Examples
+
+See the `example/` directory for complete working examples:
+
+- **simple_example.cpp** — Basic trading operations
+- **trading_example.cpp** — Advanced order management
+- **watchlist_example.cpp** — Watchlist operations
+- **crypto_example.cpp** — Crypto wallet and transfers
+- **websocket_example.cpp** — Real-time WebSocket streams (market data & trade updates)
+
+Build examples:
+
+```bash
+cmake -S . -B build -DALPACA_BUILD_EXAMPLES=ON
+cmake --build build
+cd example/build && ./simple_example
+```
+
+## Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Add tests for new functionality
+4. Ensure all tests pass (`./build/test/alpaca-tests`)
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
 
 ## License
 

@@ -60,6 +60,9 @@ This will create four executables:
 
 # Run crypto example (views crypto wallets and transfers)
 ./crypto_example
+
+# Run websocket example
+./websocket_example
 ```
 
 ## Note

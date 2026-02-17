@@ -1,15 +1,19 @@
 # Build directories
 build/
 example/build/
+test/build/
 cmake-build-*/
 out/
+_build/
+_deps/
 
 # IDE / Editor
 .vscode/
 .idea/
-*.swp
-*.swo
-*~
+*.code-workspace
+.vs/
+*.suo
+*.user
 
 # macOS
 .DS_Store
@@ -35,6 +39,23 @@ install_manifest.txt
 CTestTestfile.cmake
 Testing/
 Makefile
+*.cmake.in
+
+# Test artifacts
+*.test
+alpaca-tests
+test_results/
+test_output/
+*_test
+*Test
+
+# Coverage
+*.gcda
+*.gcno
+*.gcov
+coverage/
+coverage.info
+lcov.info
 
 # Package managers
 vcpkg_installed/
@@ -48,3 +69,15 @@ roadmap.txt
 # Environment
 .env
 .env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Cache
+.cache/
+*.swp
+*.swo
+*~
+.ccls-cache/

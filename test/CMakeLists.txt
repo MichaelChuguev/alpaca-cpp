@@ -19,6 +19,7 @@ add_executable(alpaca-tests
     models/test_option.cpp
     models/test_treasury.cpp
     models/test_account_config.cpp
+    models/test_stream_models.cpp
     trader/test_trader_api.cpp
 )
 

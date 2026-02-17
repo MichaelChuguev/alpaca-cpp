@@ -30,7 +30,7 @@ int main() {
         //    wss://paper-api.alpaca.markets/stream
         // ────────────────────────────────────────────────────────────────
         alpaca::AlpacaUpdatesStream updates(key, secret, alpaca::TraderAPIEndpoint::PAPER);
-
+        
         updates.on_auth([](bool ok) {
             std::cout << "[updates] auth: " << (ok ? "authorized" : "FAILED") << "\n";
         });
