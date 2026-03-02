@@ -1,0 +1,49 @@
+#include "alpaca/AlpacaAPI.h"
+#include "alpaca/api/rest/HTTPClient.h"
+
+namespace alpaca {
+
+    AlpacaAPI::AlpacaAPI(const std::string& traderKeyID, const std::string& traderKeySecret, const TraderAPIEndpoint& traderAPIEndpoint,
+        const MarketDataWebsocketSource& marketDataWebsocketSource)
+    : 
+        traderKeyID(traderKeyID),
+        traderKeySecret(traderKeySecret),
+        traderOAuthToken(""), // Empty for API key auth
+        traderAPIEndpoint(traderAPIEndpoint),
+        marketDataWebsocketSource(marketDataWebsocketSource),
+        brokerAPIKey(""), // Not used in this constructor
+        brokerAPISecret(""), // Not used in this constructor
+        brokerAPIEndpoint(BrokerAPIEndpoint::SANDBOX), // Default value (unused)
+        trader(traderKeyID, traderKeySecret, traderAPIEndpoint),
+        updatesStream(std::make_unique<AlpacaUpdatesStream>(traderKeyID, traderKeySecret, traderAPIEndpoint)),
+        marketDataStream(std::make_unique<AlpacaMarketDataStream>(traderKeyID, traderKeySecret,
+            marketDataWebsocketSource == MarketDataWebsocketSource::SIP ? MarketDataFeed::SIP_FEED : MarketDataFeed::IEX_FEED))
+    {
+    }
+
+    AlpacaAPI::AlpacaAPI(const std::string& traderOAuthToken, const TraderAPIEndpoint& traderAPIEndpoint)
+    : 
+        traderKeyID(""), // Empty for OAuth token auth
+        traderKeySecret(""), // Empty for OAuth token auth
+        traderOAuthToken(traderOAuthToken),
+        traderAPIEndpoint(traderAPIEndpoint),
+        marketDataWebsocketSource(MarketDataWebsocketSource::IEX), // Default value (unused)
+        brokerAPIKey(""), // Not used in this constructor
+        brokerAPISecret(""), // Not used in this constructor
+        brokerAPIEndpoint(BrokerAPIEndpoint::SANDBOX), // Default value (unused)
+        trader(traderOAuthToken, traderAPIEndpoint)
+    {
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+} // namespace alpaca

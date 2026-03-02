@@ -1,0 +1,37 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# Find required dependencies
+find_dependency(Boost 1.70)
+find_dependency(CURL)
+find_dependency(OpenSSL)
+find_dependency(nlohmann_json 3.7.3)
+
+# ---------------------------------------------------------------------------
+# IXWebSocket — if not already available as a CMake target, create an imported
+# target from the FetchContent build artifacts in the build tree.  This allows
+# consumers that use the library directly from the build directory (e.g. the
+# example sub-project) to link against it without a separate install step.
+# ---------------------------------------------------------------------------
+if(NOT TARGET ixwebsocket AND NOT TARGET ixwebsocket::ixwebsocket)
+    find_package(ixwebsocket QUIET)
+    if(NOT ixwebsocket_FOUND)
+        set(_ixws_lib "${CMAKE_CURRENT_LIST_DIR}/_deps/ixwebsocket-build/libixwebsocket.a")
+        set(_ixws_inc "${CMAKE_CURRENT_LIST_DIR}/_deps/ixwebsocket-src")
+        if(EXISTS "${_ixws_lib}" AND EXISTS "${_ixws_inc}")
+            add_library(ixwebsocket STATIC IMPORTED)
+            set_target_properties(ixwebsocket PROPERTIES
+                IMPORTED_LOCATION "${_ixws_lib}"
+                INTERFACE_INCLUDE_DIRECTORIES "${_ixws_inc}"
+            )
+        endif()
+        unset(_ixws_lib)
+        unset(_ixws_inc)
+    endif()
+endif()
+
+# Include the targets file
+include("${CMAKE_CURRENT_LIST_DIR}/alpaca-cppTargets.cmake")
+
+check_required_components(alpaca-cpp)

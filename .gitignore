@@ -1,0 +1,91 @@
+# Build directories
+build/
+example/build/
+test/build/
+cmake-build-*/
+out/
+_build/
+_deps/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.code-workspace
+.vs/
+*.suo
+*.user
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Compiled objects
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.lib
+*.dll
+*.exe
+
+# Executables
+example/*_example
+example/*example
+example/crypto_example
+example/simple_example
+example/trading_example
+example/watchlist_example
+
+# CMake generated
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+install_manifest.txt
+CTestTestfile.cmake
+Testing/
+Makefile
+*.cmake.in
+
+# Test artifacts
+*.test
+alpaca-tests
+test_results/
+test_output/
+*_test
+*Test
+
+# Coverage
+*.gcda
+*.gcno
+*.gcov
+coverage/
+coverage.info
+lcov.info
+
+# Package managers
+vcpkg_installed/
+conan/
+
+# Personal / local notes
+build.txt
+project_report.txt
+roadmap.txt
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Cache
+.cache/
+*.swp
+*.swo
+*~
+.ccls-cache/
