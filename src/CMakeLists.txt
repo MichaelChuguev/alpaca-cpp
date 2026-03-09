@@ -1,10 +1,11 @@
 add_library(alpaca-cpp
-    alpacaAPI.cpp
+    AlpacaAPI.cpp
     api/rest/HTTPClient.cpp
     api/websocket/WebSocketClient.cpp
     api/websocket/AlpacaUpdatesStream.cpp
     api/websocket/AlpacaMarketDataStream.cpp
     trader/AlpacaTraderAPI.cpp
+    marketdata/AlpacaMarketDataAPI.cpp
     core/types.cpp
 )
 

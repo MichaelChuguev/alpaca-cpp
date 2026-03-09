@@ -1,6 +1,6 @@
 # alpaca-cpp
 
-A modern (currently-incomplete) C++20 client library for the [Alpaca](https://alpaca.markets/) Trading API. Plans to add support for the Market Data and Broker APIs.
+A modern C++20 client library for the [Alpaca](https://alpaca.markets/) Trading and Market Data APIs.
 
 Contributions welcome.
 
@@ -8,21 +8,22 @@ Contributions welcome.
 
 - **Authentication** — API key/secret and OAuth token support
 - **Paper & Live** — Configurable endpoints for paper trading and live trading
-- **Trading API REST Endpoints** — Full order lifecycle (create, modify, cancel, query), position management, account info, market clock, trading calendar
-- **Trading API Websockets** - Order lifecycle updates, trade execution updates, account activity related to orders
+- **Trading API REST** — Full order lifecycle (create, modify, cancel, query), position management, account info, watchlists, portfolio history, crypto wallets, market clock & calendar
+- **Market Data API REST** — Stocks, options, crypto, forex, fixed income, news, screener, corporate actions, logos
+- **Trading API WebSockets** — Order lifecycle updates, trade execution updates, account activity
+- **Market Data API WebSockets** — Real-time trades, quotes, and bars for stocks, options, and crypto
+- **Custom Types** — Fixed-point `Decimal` (8 decimal places) for precise financial math; ISO 8601 `DateTime` with timezone support
 
 ## Todo
 
-- **Market Data REST API**
-- **Market Data API Websockets**
 - **Broker REST API**
-- **Broker API Websockets**
+- **Broker API WebSockets**
 
 ## Requirements
 
 - C++20 compiler (Clang 14+, GCC 12+, MSVC 2022+)
 - CMake 3.16+
-- [IXWebSocket](https://github.com/machinezone/IXWebSocket) (fetched automatically if not found)
+- [IXWebSocket](https://github.com/machinezone/IXWebSocket)
 - [OpenSSL](https://www.openssl.org/)
 - [Howard Hinnant date](https://github.com/HowardHinnant/date)
 - [nlohmann/json](https://github.com/nlohmann/json) 3.7.3+
@@ -70,7 +71,7 @@ target_link_libraries(your_target PRIVATE alpaca::alpaca-cpp)
 
 ### Setting up credentials
 
-1. Get your Trading API keys from [Alpaca Markets](https://app.alpaca.markets/paper/dashboard/overview)
+1. Get your API keys from [Alpaca Markets](https://alpaca.markets)
 2. Set up environment variables:
 
 ```bash
@@ -91,7 +92,7 @@ export ALPACA_SECRET_KEY="your-secret-key"
 ### Example usage
 
 ```cpp
-#include <alpaca/alpacaAPI.h>
+#include <alpaca/AlpacaAPI.h>
 #include <alpaca/api/rest/trader/AlpacaTraderAPI.h>
 
 int main() {
@@ -106,7 +107,10 @@ int main() {
     std::cout << account.to_string() << std::endl;
 
     // Create a market order
-    alpaca::Order order("AAPL", 10, alpaca::BUY, alpaca::MARKET, alpaca::DAY);
+    alpaca::Order order("AAPL", alpaca::Decimal(10),
+                        alpaca::OrderSide::BUY,
+                        alpaca::OrderType::MARKET,
+                        alpaca::OrderTimeInForce::DAY);
     auto response = api.create_order(order);
     std::cout << "Order ID: " << response.id << std::endl;
 
@@ -190,9 +194,58 @@ int main() {
 | `delete_whitelisted_address()` | Remove a whitelisted address |
 | `get_crypto_transfer_estimate()` | Estimate transfer fees |
 
+### Market Data — Stocks
+| Method | Description |
+|---|---|
+| `get_stock_trades()` | Historical trades |
+| `get_stock_trades_latest()` | Latest trade for one or more symbols |
+| `get_stock_quotes()` | Historical quotes |
+| `get_stock_quotes_latest()` | Latest quote for one or more symbols |
+| `get_stock_bars()` | Historical bars (OHLCV) |
+| `get_stock_auctions()` | Auction data |
+| `get_stock_snapshots()` | Current snapshot for one or more symbols |
+| `get_stock_conditions()` | Condition code mappings |
+| `get_stock_exchange_codes()` | Exchange code mappings |
+
+### Market Data — Options
+| Method | Description |
+|---|---|
+| `get_option_trades()` | Historical option trades |
+| `get_option_trades_latest()` | Latest option trade |
+| `get_option_quotes()` | Historical option quotes |
+| `get_option_quotes_latest()` | Latest option quote |
+| `get_option_bars()` | Historical option bars |
+| `get_option_snapshots()` | Option snapshots |
+| `get_option_exchange_codes()` | Option exchange codes |
+| `get_option_conditions()` | Option condition codes |
+
+### Market Data — Crypto
+| Method | Description |
+|---|---|
+| `get_crypto_trades()` | Historical crypto trades |
+| `get_crypto_trades_latest()` | Latest crypto trade |
+| `get_crypto_quotes()` | Historical crypto quotes |
+| `get_crypto_quotes_latest()` | Latest crypto quote |
+| `get_crypto_bars()` | Historical crypto bars |
+| `get_crypto_snapshots()` | Crypto snapshots |
+| `get_crypto_orderbooks()` | Crypto order book data |
+
+### Market Data — News, Screener & More
+| Method | Description |
+|---|---|
+| `get_news()` | News articles with optional filters |
+| `get_most_actives()` | Most active stocks/crypto |
+| `get_movers()` | Top movers by market type |
+| `get_forex_rates()` | Forex exchange rates |
+| `get_fixed_income_prices()` | Fixed income pricing |
+| `get_corporate_actions()` | Corporate action events |
+| `get_logo()` | Company/crypto logo |
+
 ## Testing
 
-So far all REST endpoints and websockets have been at least partially tested. More tests will be performed soon.
+231 basic unit tests covering all model parsing, serialization, and API URL/body construction.
+
+More to be done soon
 
 ### Running tests
 
@@ -215,12 +268,17 @@ cd build && ctest --output-on-failure
 
 ```
 include/alpaca/         Public headers
-  alpacaAPI.h           Main entry point
+  AlpacaAPI.h           Main entry point (facade for all sub-APIs)
   api/rest/             REST client & endpoint interfaces
-  core/                 Types, error handling, utilities
-  model/trader/         Data models (Account, Order, Position, …)
+    trader/             Trading API endpoints
+    marketdata/         Market Data API endpoints
+  api/websocket/        WebSocket client & streams
+  core/                 Types (Decimal, DateTime), error handling, utilities
+  model/trader/         Trading data models (Account, Order, Position, …)
+  model/data/           Market data models (Stock, Option, Crypto, News, …)
+  model/stream/         WebSocket stream models
 src/                    Implementation files
-test/                   Test suite (Google Test)
+test/                   Test suite (Google Test, 231 tests)
 example/                Example programs
 cmake/                  CMake package config
 ```
@@ -234,13 +292,17 @@ See the `example/` directory for complete working examples:
 - **watchlist_example.cpp** — Watchlist operations
 - **crypto_example.cpp** — Crypto wallet and transfers
 - **websocket_example.cpp** — Real-time WebSocket streams (market data & trade updates)
+- **stock_data_example.cpp** — Historical and latest stock market data
+- **option_data_example.cpp** — Option chain data and snapshots
+- **crypto_data_example.cpp** — Crypto market data
+- **news_screener_example.cpp** — News articles and market screener
 
-Build examples:
+Build and run examples:
 
 ```bash
 cmake -S . -B build -DALPACA_BUILD_EXAMPLES=ON
 cmake --build build
-cd example/build && ./simple_example
+./build/example/simple_example
 ```
 
 ## Contributing

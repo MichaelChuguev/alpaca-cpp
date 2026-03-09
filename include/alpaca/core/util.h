@@ -281,4 +281,75 @@ inline std::string sort_to_string(Sort s) {
     return s == Sort::ASC ? "asc" : "desc";
 }
 
+// ---------------------------------------------------------------------------
+// Market Data enum ↔ string helpers
+// ---------------------------------------------------------------------------
+
+inline std::string data_timeframe_to_string(DataTimeframe tf) {
+    switch (tf) {
+        case DataTimeframe::ONE_MIN:      return "1Min";
+        case DataTimeframe::FIVE_MIN:     return "5Min";
+        case DataTimeframe::FIFTEEN_MIN:  return "15Min";
+        case DataTimeframe::THIRTY_MIN:   return "30Min";
+        case DataTimeframe::ONE_HOUR:     return "1Hour";
+        case DataTimeframe::ONE_DAY:      return "1Day";
+        case DataTimeframe::ONE_WEEK:     return "1Week";
+        case DataTimeframe::ONE_MONTH:    return "1Month";
+    }
+    return "1Day";
+}
+
+inline std::string data_feed_to_string(DataFeed f) {
+    switch (f) {
+        case DataFeed::IEX: return "iex";
+        case DataFeed::SIP: return "sip";
+        case DataFeed::OTC: return "otc";
+        case DataFeed::DEFAULT: return "iex"; // fallback; should be resolved before reaching here
+    }
+    return "iex";
+}
+
+inline std::string crypto_loc_to_string(CryptoLoc loc) {
+    switch (loc) {
+        case CryptoLoc::US: return "us";
+    }
+    return "us";
+}
+
+inline std::string screener_market_type_to_string(ScreenerMarketType mt) {
+    switch (mt) {
+        case ScreenerMarketType::STOCKS: return "stocks";
+        case ScreenerMarketType::CRYPTO: return "crypto";
+    }
+    return "stocks";
+}
+
+inline std::string tick_type_to_string(TickType tt) {
+    switch (tt) {
+        case TickType::TRADES: return "trades";
+        case TickType::QUOTES: return "quotes";
+    }
+    return "trades";
+}
+
+inline std::string corporate_action_type_to_string(CorporateActionType t) {
+    switch (t) {
+        case CorporateActionType::REVERSE_SPLIT:          return "reverse_split";
+        case CorporateActionType::FORWARD_SPLIT:          return "forward_split";
+        case CorporateActionType::UNIT_SPLIT:             return "unit_split";
+        case CorporateActionType::CASH_DIVIDEND:          return "cash_dividend";
+        case CorporateActionType::STOCK_DIVIDEND:         return "stock_dividend";
+        case CorporateActionType::SPIN_OFF:               return "spin_off";
+        case CorporateActionType::CASH_MERGER:            return "cash_merger";
+        case CorporateActionType::STOCK_MERGER:           return "stock_merger";
+        case CorporateActionType::STOCK_AND_CASH_MERGER:  return "stock_and_cash_merger";
+        case CorporateActionType::REDEMPTION:             return "redemption";
+        case CorporateActionType::NAME_CHANGE:            return "name_change";
+        case CorporateActionType::WORTHLESS_REMOVAL:      return "worthless_removal";
+        case CorporateActionType::RIGHTS_DISTRIBUTION:    return "rights_distribution";
+        case CorporateActionType::CONTRACT_ADJUSTMENT:    return "contract_adjustment";
+    }
+    return "cash_dividend";
+}
+
 } // namespace alpaca

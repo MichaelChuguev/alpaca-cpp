@@ -7,6 +7,7 @@ find_dependency(Boost 1.70)
 find_dependency(CURL)
 find_dependency(OpenSSL)
 find_dependency(nlohmann_json 3.7.3)
+find_dependency(date)
 
 # ---------------------------------------------------------------------------
 # IXWebSocket — if not already available as a CMake target, create an imported

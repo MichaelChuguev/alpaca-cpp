@@ -1,5 +1,5 @@
 #include <iostream>
-#include "alpaca/alpacaAPI.h"
+#include "alpaca/AlpacaAPI.h"
 #include "alpaca/api/rest/trader/AlpacaTraderAPI.h"
 #include "alpaca/core/error.h"
 
@@ -83,6 +83,9 @@ int main() {
         std::cout << "Status: " << transfer.status << std::endl;
         */
 
+    } catch (const alpaca::AlpacaTraderException& e) {
+        std::cerr << "API Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+        return 1;
     } catch (const std::runtime_error& e) {
         std::string error_msg(e.what());
         if (error_msg.find("404") != std::string::npos || error_msg.find("endpoint not found") != std::string::npos) {
@@ -91,9 +94,6 @@ int main() {
         } else {
             std::cerr << "Error: " << e.what() << std::endl;
         }
-        return 1;
-    } catch (const alpaca::AlpacaTraderException& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
 

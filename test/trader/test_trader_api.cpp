@@ -38,20 +38,9 @@ public:
         : AlpacaTraderAPI("test-key", "test-secret", TraderAPIEndpoint::PAPER),
           mock(mockClient)
     {
-        // Replace the real httpClient with our mock by reference.
-        // Since httpClient is protected and not a pointer, we use placement-like approach.
-        // Actually we need to make httpClient accessible. Since it's protected, subclass can access it.
-        // We'll use a helper to swap it. But HttpClient has io_context which is not copyable.
-        // Alternative: Store a pointer. For now, let's use the mock directly in tests.
+        // Replace the real httpClient with a mock by reference.
     }
 };
-
-// Since HttpClient contains non-copyable members (io_context, resolver),
-// we can't simply swap it. Instead, we'll test URL construction and JSON
-// body building by testing the model layer thoroughly (done in model tests)
-// and here we test specific patterns via a different approach.
-
-// We use a thin wrapper that intercepts calls to capture endpoint/body.
 
 class CapturingTraderAPI : public AlpacaTraderAPI {
 public:

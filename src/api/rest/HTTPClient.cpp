@@ -22,6 +22,8 @@ HttpClient::HttpClient(const std::string& traderKeyID,
     , trader_key_secret(traderKeySecret)
     , trader_api_endpoint(traderAPIEndpoint)
     , is_broker_api(false)
+    , is_market_data_api(false)
+    , market_data_endpoint(MarketDataEndpoint::SANDBOX)
 {
     apply_tls(http_client_);
 }
@@ -31,6 +33,8 @@ HttpClient::HttpClient(const std::string& traderOAuthToken,
     : trader_oauth_token(traderOAuthToken)
     , trader_api_endpoint(traderAPIEndpoint)
     , is_broker_api(false)
+    , is_market_data_api(false)
+    , market_data_endpoint(MarketDataEndpoint::SANDBOX)
 {
     apply_tls(http_client_);
 }
@@ -42,6 +46,20 @@ HttpClient::HttpClient(const std::string& brokerAPIKey,
     , broker_api_secret(brokerAPISecret)
     , broker_api_endpoint(brokerAPIEndpoint)
     , is_broker_api(true)
+    , is_market_data_api(false)
+    , market_data_endpoint(MarketDataEndpoint::SANDBOX)
+{
+    apply_tls(http_client_);
+}
+
+HttpClient::HttpClient(const std::string& keyID,
+                       const std::string& keySecret,
+                       const MarketDataEndpoint& marketDataEndpoint)
+    : trader_key_id(keyID)
+    , trader_key_secret(keySecret)
+    , is_broker_api(false)
+    , is_market_data_api(true)
+    , market_data_endpoint(marketDataEndpoint)
 {
     apply_tls(http_client_);
 }

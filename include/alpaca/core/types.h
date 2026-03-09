@@ -125,6 +125,7 @@ using Timestamp = DateTime;
 
 enum class TraderAPIEndpoint { PAPER, LIVE };
 enum class MarketDataWebsocketSource { IEX, SIP };
+enum class MarketDataEndpoint { SANDBOX, LIVE };
 enum class BrokerAPIEndpoint { SANDBOX, PRODUCTION };
 enum class Sort { ASC, DESC };
 enum class AssetClass { US_EQUITY, US_OPTION, CRYPTO };
@@ -134,5 +135,22 @@ enum class OrderType { MARKET, LIMIT, STOP, STOP_LIMIT, TRAILING_STOP };
 enum class OrderTimeInForce { DAY, GTC, OPG, CLS, IOC, FOK };
 enum class OrderClass { SIMPLE, BRACKET, OCO, OTO, MLEG };
 enum class PositionIntent { BUY_TO_OPEN, BUY_TO_CLOSE, SELL_TO_OPEN, SELL_TO_CLOSE };
+
+// Market Data specific enums
+enum class DataTimeframe {
+    ONE_MIN, FIVE_MIN, FIFTEEN_MIN, THIRTY_MIN,
+    ONE_HOUR, ONE_DAY, ONE_WEEK, ONE_MONTH
+};
+enum class DataFeed { IEX, SIP, OTC, DEFAULT };
+enum class CryptoLoc { US };
+enum class ScreenerMarketType { STOCKS, CRYPTO };
+enum class TickType { TRADES, QUOTES };
+enum class CorporateActionType {
+    REVERSE_SPLIT, FORWARD_SPLIT, UNIT_SPLIT,
+    CASH_DIVIDEND, STOCK_DIVIDEND, SPIN_OFF,
+    CASH_MERGER, STOCK_MERGER, STOCK_AND_CASH_MERGER,
+    REDEMPTION, NAME_CHANGE, WORTHLESS_REMOVAL,
+    RIGHTS_DISTRIBUTION, CONTRACT_ADJUSTMENT
+};
 
 } // namespace alpaca

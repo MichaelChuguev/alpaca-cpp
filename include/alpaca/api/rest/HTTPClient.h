@@ -25,6 +25,7 @@ public:
     HttpClient(const std::string& traderKeyID, const std::string& traderKeySecret, const TraderAPIEndpoint& traderAPIEndpoint);
     HttpClient(const std::string& traderOAuthToken, const TraderAPIEndpoint& traderAPIEndpoint);
     HttpClient(const std::string& brokerAPIKey, const std::string& brokerAPISecret, const BrokerAPIEndpoint& brokerAPIEndpoint);
+    HttpClient(const std::string& keyID, const std::string& keySecret, const MarketDataEndpoint& marketDataEndpoint);
 
     // Core methods
     virtual nlohmann::json get(const std::string& endpoint);
@@ -34,6 +35,9 @@ public:
     virtual nlohmann::json del(const std::string& endpoint);
 
     virtual ~HttpClient() = default;
+
+    /** Returns the full base URL (e.g. "https://data.alpaca.markets") for this client. */
+    std::string get_base_url() const { return "https://" + get_host(); }
 
     // Async variants
     void async_get(const std::string& endpoint, std::function<void(nlohmann::json)> callback);
@@ -50,11 +54,16 @@ private:
     BrokerAPIEndpoint broker_api_endpoint;
 
     bool is_broker_api;
+    bool is_market_data_api;
 
-    const std::string trading_paper     = "paper-api.alpaca.markets";
-    const std::string trading_live      = "api.alpaca.markets";
-    const std::string broker_sandbox    = "broker-api.sandbox.alpaca.markets";
-    const std::string broker_production = "broker-api.alpaca.markets";
+    MarketDataEndpoint market_data_endpoint;
+
+    const std::string trading_paper      = "paper-api.alpaca.markets";
+    const std::string trading_live       = "api.alpaca.markets";
+    const std::string broker_sandbox     = "broker-api.sandbox.alpaca.markets";
+    const std::string broker_production  = "broker-api.alpaca.markets";
+    const std::string data_sandbox       = "data.sandbox.alpaca.markets";
+    const std::string data_live          = "data.alpaca.markets";
 
     ix::HttpClient http_client_;
 
@@ -69,6 +78,9 @@ private:
                               const nlohmann::json& body = {});
 
     std::string get_host() const {
+        if (is_market_data_api) {
+            return market_data_endpoint == MarketDataEndpoint::SANDBOX ? data_sandbox : data_live;
+        }
         if (is_broker_api) {
             return broker_api_endpoint == BrokerAPIEndpoint::SANDBOX ? broker_sandbox : broker_production;
         }

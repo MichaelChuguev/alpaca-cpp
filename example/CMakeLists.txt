@@ -26,3 +26,15 @@ target_link_libraries(crypto_example PRIVATE alpaca::alpaca-cpp)
 
 add_executable(websocket_example websocket_example.cpp)
 target_link_libraries(websocket_example PRIVATE alpaca::alpaca-cpp)
+
+add_executable(stock_data_example stock_data_example.cpp)
+target_link_libraries(stock_data_example PRIVATE alpaca::alpaca-cpp)
+
+add_executable(option_data_example option_data_example.cpp)
+target_link_libraries(option_data_example PRIVATE alpaca::alpaca-cpp)
+
+add_executable(crypto_data_example crypto_data_example.cpp)
+target_link_libraries(crypto_data_example PRIVATE alpaca::alpaca-cpp)
+
+add_executable(news_screener_example news_screener_example.cpp)
+target_link_libraries(news_screener_example PRIVATE alpaca::alpaca-cpp)

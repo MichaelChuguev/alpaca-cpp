@@ -11,10 +11,14 @@ namespace alpaca {
         traderOAuthToken(""), // Empty for API key auth
         traderAPIEndpoint(traderAPIEndpoint),
         marketDataWebsocketSource(marketDataWebsocketSource),
+        marketDataEndpoint(traderAPIEndpoint == TraderAPIEndpoint::LIVE ? MarketDataEndpoint::LIVE : MarketDataEndpoint::SANDBOX),
         brokerAPIKey(""), // Not used in this constructor
         brokerAPISecret(""), // Not used in this constructor
         brokerAPIEndpoint(BrokerAPIEndpoint::SANDBOX), // Default value (unused)
         trader(traderKeyID, traderKeySecret, traderAPIEndpoint),
+        marketData(traderKeyID, traderKeySecret,
+            traderAPIEndpoint == TraderAPIEndpoint::LIVE ? MarketDataEndpoint::LIVE : MarketDataEndpoint::SANDBOX,
+            marketDataWebsocketSource == MarketDataWebsocketSource::SIP ? DataFeed::SIP : DataFeed::IEX),
         updatesStream(std::make_unique<AlpacaUpdatesStream>(traderKeyID, traderKeySecret, traderAPIEndpoint)),
         marketDataStream(std::make_unique<AlpacaMarketDataStream>(traderKeyID, traderKeySecret,
             marketDataWebsocketSource == MarketDataWebsocketSource::SIP ? MarketDataFeed::SIP_FEED : MarketDataFeed::IEX_FEED))
@@ -28,22 +32,15 @@ namespace alpaca {
         traderOAuthToken(traderOAuthToken),
         traderAPIEndpoint(traderAPIEndpoint),
         marketDataWebsocketSource(MarketDataWebsocketSource::IEX), // Default value (unused)
+        marketDataEndpoint(traderAPIEndpoint == TraderAPIEndpoint::LIVE ? MarketDataEndpoint::LIVE : MarketDataEndpoint::SANDBOX),
         brokerAPIKey(""), // Not used in this constructor
         brokerAPISecret(""), // Not used in this constructor
         brokerAPIEndpoint(BrokerAPIEndpoint::SANDBOX), // Default value (unused)
-        trader(traderOAuthToken, traderAPIEndpoint)
+        trader(traderOAuthToken, traderAPIEndpoint),
+        marketData("", "",
+            traderAPIEndpoint == TraderAPIEndpoint::LIVE ? MarketDataEndpoint::LIVE : MarketDataEndpoint::SANDBOX,
+            DataFeed::IEX)
     {
     }
-
-
-
-
-
-
-
-
-
-
-
 
 } // namespace alpaca

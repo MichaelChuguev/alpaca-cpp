@@ -4,7 +4,7 @@
 #include <csignal>
 #include <atomic>
 
-#include "alpaca/alpacaAPI.h"
+#include "alpaca/AlpacaAPI.h"
 #include "alpaca/api/websocket/AlpacaUpdatesStream.h"
 #include "alpaca/api/websocket/AlpacaMarketDataStream.h"
 #include "alpaca/core/error.h"

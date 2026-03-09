@@ -47,7 +47,7 @@ install_manifest.txt
 CTestTestfile.cmake
 Testing/
 Makefile
-*.cmake.in
+# Note: cmake/alpaca-cppConfig.cmake.in is tracked and should not be ignored
 
 # Test artifacts
 *.test

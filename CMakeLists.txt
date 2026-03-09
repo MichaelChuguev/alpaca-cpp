@@ -37,6 +37,7 @@ if(NOT ixwebsocket_FOUND)
     FetchContent_Declare(
         ixwebsocket
         URL https://github.com/machinezone/IXWebSocket/archive/refs/tags/v11.4.4.tar.gz
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     )
     FetchContent_MakeAvailable(ixwebsocket)
 endif()

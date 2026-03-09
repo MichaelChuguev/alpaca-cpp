@@ -6,6 +6,7 @@
 #include "alpaca/api/rest/HTTPClient.h"
 #include "alpaca/core/types.h"
 #include "alpaca/api/rest/trader/AlpacaTraderAPI.h"
+#include "alpaca/api/rest/marketdata/AlpacaMarketDataAPI.h"
 #include "alpaca/api/websocket/AlpacaUpdatesStream.h"
 #include "alpaca/api/websocket/AlpacaMarketDataStream.h"
 
@@ -21,12 +22,12 @@ class AlpacaAPI {
     const std::string traderOAuthToken;
     const TraderAPIEndpoint traderAPIEndpoint;
     const MarketDataWebsocketSource marketDataWebsocketSource;
+    const MarketDataEndpoint marketDataEndpoint;
 
     const std::string brokerAPIKey;
     const std::string brokerAPISecret;
     const BrokerAPIEndpoint brokerAPIEndpoint;
 
-    //AlpacaMarketDataAPI marketData;
     //AlpacaBrokerAPI broker;
 
 
@@ -77,6 +78,10 @@ class AlpacaAPI {
     AlpacaAPI(const std::string& traderKeyID, const std::string& traderKeySecret, const TraderAPIEndpoint& traderAPIEndpoint, const MarketDataWebsocketSource& marketDataWebsocketSource, const std::string& brokerAPIKey, const std::string& brokerAPISecret, const BrokerAPIEndpoint& brokerAPIEndpoint);
 
     AlpacaTraderAPI trader;
+
+    /// REST Market Data API — stocks, options, crypto, forex, news, screener, etc.
+    /// Available when constructed with trader API keys.
+    AlpacaMarketDataAPI marketData;
 
     /// WebSocket stream for trade / order updates (binary frames).
     /// Available when constructed with trader API keys.

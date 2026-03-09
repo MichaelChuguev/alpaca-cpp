@@ -1,4 +1,15 @@
-find_package(GTest REQUIRED)
+# ---------------------------------------------------------------------------
+# GoogleTest — always build from source via FetchContent to guarantee ABI
+# compatibility with the current compiler.
+# ---------------------------------------------------------------------------
+include(FetchContent)
+FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.tar.gz
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
 
 include(GoogleTest)
 
@@ -18,11 +29,18 @@ add_executable(alpaca-tests
     models/test_account_config.cpp
     models/test_stream_models.cpp
     trader/test_trader_api.cpp
+    data/test_stock_data.cpp
+    data/test_option_data.cpp
+    data/test_crypto_data.cpp
+    data/test_news_data.cpp
 )
 
 target_include_directories(alpaca-tests
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    BEFORE SYSTEM PRIVATE
+        ${googletest_SOURCE_DIR}/googletest/include
+        ${googletest_SOURCE_DIR}/googlemock/include
 )
 
 target_link_libraries(alpaca-tests
