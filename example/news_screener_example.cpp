@@ -1,6 +1,5 @@
 #include <iostream>
 #include <vector>
-#include "alpaca/AlpacaAPI.h"
 #include "alpaca/api/rest/marketdata/AlpacaMarketDataAPI.h"
 #include "alpaca/core/types.h"
 

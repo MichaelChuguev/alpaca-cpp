@@ -1,5 +1,4 @@
 #include <iostream>
-#include "alpaca/AlpacaAPI.h"
 #include "alpaca/api/rest/trader/AlpacaTraderAPI.h"
 #include "alpaca/core/error.h"
 

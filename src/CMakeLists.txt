@@ -1,5 +1,4 @@
 add_library(alpaca-cpp
-    AlpacaAPI.cpp
     api/rest/HTTPClient.cpp
     auth/AlpacaAuthAPI.cpp
     api/websocket/WebSocketClient.cpp
