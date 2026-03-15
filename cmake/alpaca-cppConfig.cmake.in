@@ -1,0 +1,34 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# Find required dependencies
+find_dependency(OpenSSL)
+find_dependency(nlohmann_json 3.7.3)
+find_dependency(date)
+
+# ---------------------------------------------------------------------------
+# IXWebSocket — prefer system package target. If unavailable, fall back to the
+# bundled static library that may have been installed into this package prefix.
+# ---------------------------------------------------------------------------
+if(NOT TARGET ixwebsocket AND NOT TARGET ixwebsocket::ixwebsocket)
+    find_package(ixwebsocket CONFIG QUIET)
+    if(NOT TARGET ixwebsocket AND NOT TARGET ixwebsocket::ixwebsocket)
+        set(_ixws_lib "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_LIBDIR@/libixwebsocket.a")
+        set(_ixws_inc "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_INCLUDEDIR@")
+        if(EXISTS "${_ixws_lib}" AND EXISTS "${_ixws_inc}/ixwebsocket")
+            add_library(ixwebsocket STATIC IMPORTED)
+            set_target_properties(ixwebsocket PROPERTIES
+                IMPORTED_LOCATION "${_ixws_lib}"
+                INTERFACE_INCLUDE_DIRECTORIES "${_ixws_inc}"
+            )
+        endif()
+    endif()
+    unset(_ixws_lib)
+    unset(_ixws_inc)
+endif()
+
+# Include the targets file
+include("${CMAKE_CURRENT_LIST_DIR}/alpaca-cppTargets.cmake")
+
+check_required_components(alpaca-cpp)
