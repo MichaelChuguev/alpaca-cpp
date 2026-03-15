@@ -1,4 +1,4 @@
-#include "alpaca/api/websocket/AlpacaUpdatesStream.h"
+#include "alpaca/AlpacaUpdatesStream.h"
 
 #include <iostream>
 

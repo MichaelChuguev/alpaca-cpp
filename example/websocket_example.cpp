@@ -4,8 +4,8 @@
 #include <csignal>
 #include <atomic>
 
-#include "alpaca/api/websocket/AlpacaUpdatesStream.h"
-#include "alpaca/api/websocket/AlpacaMarketDataStream.h"
+#include "alpaca/AlpacaUpdatesStream.h"
+#include "alpaca/AlpacaMarketDataStream.h"
 #include "alpaca/core/error.h"
 
 static std::atomic<bool> running{true};

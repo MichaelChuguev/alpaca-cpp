@@ -2,7 +2,7 @@
 #include <gmock/gmock.h>
 #include "nlohmann/json.hpp"
 
-#include "alpaca/api/rest/trader/AlpacaTraderAPI.h"
+#include "alpaca/AlpacaTraderAPI.h"
 #include "alpaca/core/error.h"
 #include "alpaca/core/types.h"
 

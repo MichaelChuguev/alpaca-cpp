@@ -8,7 +8,7 @@
 
 #include "alpaca/core/types.h"
 #include "alpaca/api/rest/HTTPClient.h"
-#include "alpaca/api/sse/BrokerSSEClient.h"
+#include "alpaca/BrokerSSEClient.h"
 #include "alpaca/model/broker/common.h"
 #include "alpaca/model/trader/account.h"
 #include "alpaca/model/trader/activity.h"

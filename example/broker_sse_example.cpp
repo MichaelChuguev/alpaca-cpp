@@ -5,7 +5,7 @@
 #include <iostream>
 #include <thread>
 
-#include "alpaca/api/rest/broker/AlpacaBrokerAPI.h"
+#include "alpaca/AlpacaBrokerAPI.h"
 
 static std::atomic<bool> running{true};
 

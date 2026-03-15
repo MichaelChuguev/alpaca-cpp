@@ -1,4 +1,4 @@
-#include "alpaca/api/rest/marketdata/AlpacaMarketDataAPI.h"
+#include "alpaca/AlpacaMarketDataAPI.h"
 #include "alpaca/core/error.h"
 #include "alpaca/core/util.h"
 

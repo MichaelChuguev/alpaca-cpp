@@ -1,4 +1,4 @@
-#include "alpaca/api/sse/BrokerSSEClient.h"
+#include "alpaca/BrokerSSEClient.h"
 
 #include <sstream>
 #include <utility>

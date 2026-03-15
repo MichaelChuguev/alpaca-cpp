@@ -1,4 +1,4 @@
-#include "alpaca/api/rest/auth/AlpacaAuthAPI.h"
+#include "alpaca/AlpacaAuthAPI.h"
 
 namespace alpaca {
 

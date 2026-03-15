@@ -129,7 +129,7 @@ target_link_libraries(your_target PRIVATE alpaca::alpaca-cpp)
 ```cpp
 #include <cstdlib>
 #include <iostream>
-#include "alpaca/api/rest/trader/AlpacaTraderAPI.h"
+#include "alpaca/AlpacaTraderAPI.h"
 
 int main() {
     const char* key = std::getenv("ALPACA_API_KEY");
@@ -145,7 +145,7 @@ int main() {
 ### Market Data API
 
 ```cpp
-#include "alpaca/api/rest/marketdata/AlpacaMarketDataAPI.h"
+#include "alpaca/AlpacaMarketDataAPI.h"
 
 int main() {
     alpaca::AlpacaMarketDataAPI md(
@@ -164,7 +164,7 @@ int main() {
 Legacy auth:
 
 ```cpp
-#include "alpaca/api/rest/broker/AlpacaBrokerAPI.h"
+#include "alpaca/AlpacaBrokerAPI.h"
 
 alpaca::AlpacaBrokerAPI broker(
     std::getenv("ALPACA_BROKER_API_KEY"),
@@ -176,7 +176,7 @@ alpaca::AlpacaBrokerAPI broker(
 Client-credentials auth (recommended):
 
 ```cpp
-#include "alpaca/api/rest/broker/AlpacaBrokerAPI.h"
+#include "alpaca/AlpacaBrokerAPI.h"
 
 alpaca::AlpacaBrokerAPI broker(
     std::getenv("ALPACA_BROKER_CLIENT_ID"),
@@ -204,13 +204,13 @@ See the runnable examples:
 
 Public entry headers:
 
-- `include/alpaca/api/rest/trader/AlpacaTraderAPI.h`
-- `include/alpaca/api/rest/marketdata/AlpacaMarketDataAPI.h`
-- `include/alpaca/api/rest/broker/AlpacaBrokerAPI.h`
-- `include/alpaca/api/rest/auth/AlpacaAuthAPI.h`
-- `include/alpaca/api/websocket/AlpacaUpdatesStream.h`
-- `include/alpaca/api/websocket/AlpacaMarketDataStream.h`
-- `include/alpaca/api/sse/BrokerSSEClient.h`
+- `include/alpaca/AlpacaTraderAPI.h`
+- `include/alpaca/AlpacaMarketDataAPI.h`
+- `include/alpaca/AlpacaBrokerAPI.h`
+- `include/alpaca/AlpacaAuthAPI.h`
+- `include/alpaca/AlpacaUpdatesStream.h`
+- `include/alpaca/AlpacaMarketDataStream.h`
+- `include/alpaca/BrokerSSEClient.h`
 - `include/alpaca/core/types.h`
 
 Trader API categories:
@@ -258,10 +258,17 @@ Run a subset:
 
 ```text
 include/alpaca/
+  AlpacaTraderAPI.h
+  AlpacaMarketDataAPI.h
+  AlpacaBrokerAPI.h
+  AlpacaAuthAPI.h
+  AlpacaUpdatesStream.h
+  AlpacaMarketDataStream.h
+  BrokerSSEClient.h
   api/
-    rest/          # Trader, MarketData, Broker, Auth REST clients
-    websocket/     # Trading + market-data stream clients
-    sse/           # Broker SSE client
+    rest/          # Internal REST transport headers (e.g., HTTPClient)
+    websocket/     # Internal WebSocket transport headers
+    sse/           # Internal SSE transport headers
   core/            # Decimal, DateTime, enums, errors, helpers
   model/           # Trader/data/stream/broker model types
 

@@ -1,4 +1,4 @@
-#include "alpaca/api/rest/trader/AlpacaTraderAPI.h"
+#include "alpaca/AlpacaTraderAPI.h"
 #include "alpaca/core/error.h"
 #include "alpaca/core/util.h"
 
