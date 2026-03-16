@@ -142,12 +142,12 @@ Account AlpacaBrokerAPI::get_trading_account(const std::string& account_id) {
     return Account(httpClient.get("/v1/trading/accounts/" + account_id + "/account"));
 }
 
-BrokerEntity AlpacaBrokerAPI::get_pdt_status(const std::string& account_id) {
-    return BrokerEntity(httpClient.get("/v1/trading/accounts/" + account_id + "/account/pdt/status"));
+PDTStatus AlpacaBrokerAPI::get_pdt_status(const std::string& account_id) {
+    return PDTStatus(httpClient.get("/v1/trading/accounts/" + account_id + "/account/pdt/status"));
 }
 
-BrokerEntity AlpacaBrokerAPI::pdt_one_time_removal(const std::string& account_id) {
-    return BrokerEntity(httpClient.post("/v1/trading/accounts/" + account_id + "/account/pdt/one-time-removal", json::object()));
+PDTStatus AlpacaBrokerAPI::pdt_one_time_removal(const std::string& account_id) {
+    return PDTStatus(httpClient.post("/v1/trading/accounts/" + account_id + "/account/pdt/one-time-removal", json::object()));
 }
 
 BrokerEntity AlpacaBrokerAPI::close_account(const std::string& account_id, const json& request) {
