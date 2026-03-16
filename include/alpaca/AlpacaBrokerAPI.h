@@ -11,6 +11,7 @@
 #include "alpaca/BrokerSSEClient.h"
 #include "alpaca/model/broker/common.h"
 #include "alpaca/model/broker/brokerAccount.h"
+#include "alpaca/model/broker/optionsApproval.h"
 #include "alpaca/model/trader/account.h"
 #include "alpaca/model/trader/activity.h"
 #include "alpaca/model/trader/asset.h"
@@ -71,8 +72,28 @@ public:
     BrokerAccount create_account(const json& account_request);
     BrokerAccount get_account(const std::string& account_id);
     BrokerAccount patch_account(const std::string& account_id, const json& patch_request);
-    BrokerEntity request_options_for_account(const std::string& account_id, const json& request);
-    std::vector<BrokerEntity> request_list_options_approvals(const std::string& query = "");
+    /*
+    * Request options trading approval for account. Integer: 1-3
+    * 1 -> Level 1: Eligible for basic options trading (covered calls, cash-secured puts)
+    * 2 -> Level 2: Eligible for long calls/puts
+    * 3 -> Level 3: Eligible for spreads and straddles
+    */
+    OptionsApproval request_options_for_account(const std::string& account_id, int level);
+    /*
+    * Get list of options approval requests for one account or all accounts.
+    *
+    * Requested levels and approved levels:
+    * 1 -> Level 1: Eligible for basic options trading (covered calls, cash-secured puts)
+    * 2 -> Level 2: Eligible for long calls/puts
+    * 3 -> Level 3: Eligible for spreads and straddles
+    * 
+    * OptionsApprovalStatus values:
+    * PENDING
+    * APPROVED
+    * LOWER_LEVEL_APPROVED
+    * REJECTED
+    */
+    std::vector<OptionsApproval> get_options_approvals_requests(const std::string& account_id = "", int requested_level = -1, int approved_level = -1, OptionsApprovalStatus status = OptionsApprovalStatus::UNSET, int page_size = -1, const std::string& page_token = "");
     std::vector<BrokerEntity> get_account_activities(const std::string& query = "");
     std::vector<BrokerEntity> get_account_activities_by_type(const std::string& activity_type, const std::string& query = "");
     Account get_trading_account(const std::string& account_id);

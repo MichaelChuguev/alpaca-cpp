@@ -134,6 +134,7 @@ enum class BrokerAPIEndpoint { SANDBOX, PRODUCTION };
 // CLIENT_CREDENTIALS – exchange client_id+client_secret for a short-lived OAuth2
 //                      Bearer token at authx.alpaca.markets (recommended).
 enum class BrokerAuthMode { LEGACY, CLIENT_CREDENTIALS };
+enum class OptionsApprovalStatus { UNSET, PENDING, APPROVED, LOWER_LEVEL_APPROVED, REJECTED };
 enum class Sort { ASC, DESC };
 enum class AssetClass { US_EQUITY, US_OPTION, CRYPTO };
 enum class Exchange { AMEX, ARCA, BATS, NYSE, NASDAQ, NYSEARCA, OTC };

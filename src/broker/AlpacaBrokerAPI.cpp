@@ -84,12 +84,22 @@ BrokerAccount AlpacaBrokerAPI::patch_account(const std::string& account_id, cons
     return BrokerAccount(httpClient.patch("/v1/accounts/" + account_id, patch_request));
 }
 
-BrokerEntity AlpacaBrokerAPI::request_options_for_account(const std::string& account_id, const json& request) {
-    return BrokerEntity(httpClient.post("/v1/accounts/" + account_id + "/options/approval", request));
+OptionsApproval AlpacaBrokerAPI::request_options_for_account(const std::string& account_id, int level) {
+    return OptionsApproval(httpClient.post("/v1/accounts/" + account_id + "/options/approval", {{"level", level}}));
 }
 
-std::vector<BrokerEntity> AlpacaBrokerAPI::request_list_options_approvals(const std::string& query) {
-    return parse_array<BrokerEntity>(httpClient.get(with_query("/v1/accounts/options/approvals", query)));
+std::vector<OptionsApproval> AlpacaBrokerAPI::get_options_approvals_requests(const std::string& account_id, int requested_level, int approved_level, OptionsApprovalStatus status, int page_size, const std::string& page_token) {
+    auto qb = QueryBuilder("/v1/accounts/options/approvals")
+        .add("account_id", account_id)
+        .add("status", options_approval_status_to_string(status))
+        .add("page_token", page_token);
+
+    if (requested_level >= 0) qb.add("requested_level", std::to_string(requested_level));
+    if (approved_level >= 0) qb.add("approved_level", std::to_string(approved_level));
+    if (page_size > 0) qb.add("page_size", page_size);
+
+    json j = httpClient.get(qb.build());
+    return parse_array<OptionsApproval>(j["options_approvals"]);
 }
 
 std::vector<BrokerEntity> AlpacaBrokerAPI::get_account_activities(const std::string& query) {
