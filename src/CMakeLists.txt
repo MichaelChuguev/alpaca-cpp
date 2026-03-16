@@ -10,6 +10,7 @@ add_library(alpaca-cpp
     marketdata/AlpacaMarketDataAPI.cpp
     core/types.cpp
 )
+add_library(alpaca::alpaca-cpp ALIAS alpaca-cpp)
 
 if(TARGET ixwebsocket::ixwebsocket)
     set(ALPACA_IXWEBSOCKET_TARGET ixwebsocket::ixwebsocket)

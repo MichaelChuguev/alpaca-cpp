@@ -1,131 +1,73 @@
-# Alpaca C++ Library Examples
+# Examples
 
-This directory contains example programs demonstrating how to use the alpaca-cpp library.
+Runnable programs that demonstrate each major feature area of **alpaca-cpp**.
 
-## Examples
+All examples use **paper trading** / **sandbox** endpoints by default — no real money is affected.
 
-1. **simple_example.cpp** - Basic usage: Get account info, market clock, and positions
-2. **trading_example.cpp** - Order management: Create, modify, and cancel orders
-3. **watchlist_example.cpp** - Watchlist operations: Create, update, and manage watchlists
-4. **crypto_example.cpp** - Crypto operations: View wallets, transfers, and whitelisted addresses
-5. **broker_sse_example.cpp** - Broker event streaming over SSE with reconnect and event callbacks
+## List of examples
 
-## Building the Examples
+| Example | Description |
+|---|---|
+| `simple_example` | Account info, market clock, positions, assets |
+| `trading_example` | Order management: create, modify, cancel |
+| `watchlist_example` | Watchlist CRUD |
+| `crypto_example` | Crypto wallets, transfers, whitelisted addresses |
+| `websocket_example` | Real-time trade/quote streaming via WebSocket |
+| `stock_data_example` | Historical and latest stock market data |
+| `option_data_example` | Option bars, trades, quotes, snapshots, chain |
+| `crypto_data_example` | Crypto bars, trades, quotes, orderbooks |
+| `news_screener_example` | News articles and stock screener endpoints |
+| `broker_sse_example` | Broker event streaming over SSE |
+| `broker_get_accounts_example` | Broker account listing (legacy + client-credentials auth) |
 
-### Prerequisites
+## Building
 
-1. Set your Alpaca API credentials as environment variables:
-```bash
-# Trading API (for simple_example, trading_example, watchlist_example, crypto_example)
-export ALPACA_API_KEY="your_api_key_here"
-export ALPACA_SECRET_KEY="your_secret_key_here"
-
-# Broker API: legacy (key/secret)
-export ALPACA_BROKER_API_KEY="your_broker_key_id"
-export ALPACA_BROKER_API_SECRET="your_broker_secret_key"
-
-# Broker API: client credentials (recommended — auto token refresh)
-# These take precedence over the legacy vars when both are set.
-export ALPACA_BROKER_CLIENT_ID="your_client_id"
-export ALPACA_BROKER_CLIENT_SECRET="your_client_secret"
-```
-
-2. Build the alpaca-cpp library first:
-```bash
-cd ..
-mkdir -p build
-cd build
-cmake ..
-cmake --build .
-cd ../example
-```
-
-### Build Examples
+From the repository root:
 
 ```bash
-mkdir -p build
-cd build
-cmake ..
-cmake --build .
+cmake -S . -B build -DALPACA_BUILD_EXAMPLES=ON
+cmake --build build
 ```
 
-This will create multiple executables, including:
-- `simple_example`
-- `trading_example`
-- `watchlist_example`
-- `crypto_example`
-- `broker_sse_example`
+## Credentials
 
-## Running the Examples
+Set the environment variables required by the example you want to run:
 
 ```bash
-# From the example/build directory
+# Trading / Market Data
+export ALPACA_API_KEY="your-api-key"
+export ALPACA_SECRET_KEY="your-secret-key"
 
-# Run simple example (read-only operations)
-./simple_example
+# Broker — legacy auth
+export ALPACA_BROKER_API_KEY="your-broker-key"
+export ALPACA_BROKER_API_SECRET="your-broker-secret"
 
-# Run trading example (creates and cancels orders)
-./trading_example
-
-# Run watchlist example (creates and deletes watchlists)
-./watchlist_example
-
-# Run crypto example (views crypto wallets and transfers)
-./crypto_example
-
-# Run websocket example
-./websocket_example
-
-# Run broker SSE example (legacy)
-export ALPACA_BROKER_API_KEY="your_key"
-export ALPACA_BROKER_API_SECRET="your_secret"
-./broker_sse_example
-
-# Run broker SSE example (client credentials)
-export ALPACA_BROKER_CLIENT_ID="your_client_id"
-export ALPACA_BROKER_CLIENT_SECRET="your_client_secret"
-./broker_sse_example
+# Broker — client credentials auth (recommended)
+export ALPACA_BROKER_CLIENT_ID="your-client-id"
+export ALPACA_BROKER_CLIENT_SECRET="your-client-secret"
 ```
 
-## Note
+Or copy `.env.example` to `.env`, fill in your keys, and `source .env`.
 
-These examples use the **PAPER TRADING** endpoint by default. No real money or assets will be affected. To use live trading, change `alpaca::TraderAPIEndpoint::PAPER` to `alpaca::TraderAPIEndpoint::LIVE` in the source code (not recommended for testing!).
+## Running
 
-## API Credentials
+```bash
+./build/example/simple_example
+./build/example/trading_example
+./build/example/websocket_example
+./build/example/broker_sse_example
+# ... etc.
+```
 
-You can get your API credentials from:
-- Paper Trading: https://app.alpaca.markets/paper/dashboard/overview
-- Live Trading: https://app.alpaca.markets/brokerage/dashboard/overview
+## Getting API keys
 
-Go to "Your API Keys" section to generate new keys.
+- Paper Trading: <https://app.alpaca.markets/paper/dashboard/overview>
+- Live Trading: <https://app.alpaca.markets/brokerage/dashboard/overview>
+
+Navigate to the **API Keys** section to generate new keys.
 
 ## Troubleshooting
 
-### "Library not found" error
+**401 Unauthorized** — verify you are using the correct endpoint (paper/live/sandbox) for your credentials and that env vars are exported in the current shell.
 
-If you get an error about alpaca-cpp not being found, make sure you've built the library first and that the `alpaca-cpp_DIR` path in CMakeLists.txt points to the correct build directory.
-
-### "HTTP 401 Unauthorized" error
-
-Check that your API keys are set correctly:
-```bash
-# Trading API
-echo $ALPACA_API_KEY
-echo $ALPACA_SECRET_KEY
-
-# Broker API (legacy)
-echo $ALPACA_BROKER_API_KEY
-echo $ALPACA_BROKER_API_SECRET
-
-# Broker API (client credentials)
-echo $ALPACA_BROKER_CLIENT_ID
-echo $ALPACA_BROKER_CLIENT_SECRET
-```
-
-### "Symbol not found" error
-
-Make sure the symbols you're trading are valid and tradable. You can check using:
-```cpp
-auto asset = api.get_asset("AAPL");
-std::cout << "Tradable: " << (asset.tradable ? "yes" : "no") << std::endl;
-```
+**Library not found** — make sure you built from the repository root with `-DALPACA_BUILD_EXAMPLES=ON` so the library target is available.

@@ -61,20 +61,27 @@ std::string AlpacaBrokerAPI::make_sse_url(const std::string& path) const {
 // Accounts
 // ---------------------------------------------------------------------------
 
-std::vector<BrokerEntity> AlpacaBrokerAPI::get_accounts(const std::string& query) {
-    return parse_array<BrokerEntity>(httpClient.get(with_query("/v1/accounts", query)));
+std::vector<BrokerAccount> AlpacaBrokerAPI::get_accounts(const std::string& status, const std::string& created_after, const std::string& created_before, const std::string& sort, const std::string& entities) {
+    std::string query;
+    if (!status.empty()) query += "status=" + status + "&";
+    if (!created_after.empty()) query += "created_after=" + created_after + "&";
+    if (!created_before.empty()) query += "created_before=" + created_before + "&";
+    if (!sort.empty()) query += "sort=" + sort + "&";
+    if (!entities.empty()) query += "entities=" + entities + "&";
+    if (!query.empty() && query.back() == '&') query.pop_back();
+    return parse_array<BrokerAccount>(httpClient.get(with_query("/v1/accounts", query)));
 }
 
-BrokerEntity AlpacaBrokerAPI::create_account(const json& account_request) {
-    return BrokerEntity(httpClient.post("/v1/accounts", account_request));
+BrokerAccount AlpacaBrokerAPI::create_account(const json& account_request) {
+    return BrokerAccount(httpClient.post("/v1/accounts", account_request));
 }
 
-BrokerEntity AlpacaBrokerAPI::get_account(const std::string& account_id) {
-    return BrokerEntity(httpClient.get("/v1/accounts/" + account_id));
+BrokerAccount AlpacaBrokerAPI::get_account(const std::string& account_id) {
+    return BrokerAccount(httpClient.get("/v1/accounts/" + account_id));
 }
 
-BrokerEntity AlpacaBrokerAPI::patch_account(const std::string& account_id, const json& patch_request) {
-    return BrokerEntity(httpClient.patch("/v1/accounts/" + account_id, patch_request));
+BrokerAccount AlpacaBrokerAPI::patch_account(const std::string& account_id, const json& patch_request) {
+    return BrokerAccount(httpClient.patch("/v1/accounts/" + account_id, patch_request));
 }
 
 BrokerEntity AlpacaBrokerAPI::request_options_for_account(const std::string& account_id, const json& request) {

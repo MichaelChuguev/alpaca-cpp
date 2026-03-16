@@ -16,9 +16,9 @@ using json = nlohmann::json;
 // JSON parsing helpers — eliminate repeated contains/null-check boilerplate
 // ---------------------------------------------------------------------------
 
-/// Parse a string field, returning "" if missing or null.
+/// Parse a string field, returning "" if missing, null, or not a string.
 inline std::string parse_string(const json& j, const std::string& key) {
-    if (j.contains(key) && !j[key].is_null()) {
+    if (j.contains(key) && j[key].is_string()) {
         return j[key].get<std::string>();
     }
     return "";

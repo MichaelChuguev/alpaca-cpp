@@ -10,6 +10,7 @@
 #include "alpaca/api/rest/HTTPClient.h"
 #include "alpaca/BrokerSSEClient.h"
 #include "alpaca/model/broker/common.h"
+#include "alpaca/model/broker/brokerAccount.h"
 #include "alpaca/model/trader/account.h"
 #include "alpaca/model/trader/activity.h"
 #include "alpaca/model/trader/asset.h"
@@ -66,10 +67,10 @@ public:
     }
 
     // ── Accounts ─────────────────────────────────────────────────────────
-    std::vector<BrokerEntity> get_accounts(const std::string& query = "");
-    BrokerEntity create_account(const json& account_request);
-    BrokerEntity get_account(const std::string& account_id);
-    BrokerEntity patch_account(const std::string& account_id, const json& patch_request);
+    std::vector<BrokerAccount> get_accounts(const std::string& status = "", const std::string& created_after = "", const std::string& created_before = "", const std::string& sort = "desc", const std::string& entities = "");
+    BrokerAccount create_account(const json& account_request);
+    BrokerAccount get_account(const std::string& account_id);
+    BrokerAccount patch_account(const std::string& account_id, const json& patch_request);
     BrokerEntity request_options_for_account(const std::string& account_id, const json& request);
     std::vector<BrokerEntity> request_list_options_approvals(const std::string& query = "");
     std::vector<BrokerEntity> get_account_activities(const std::string& query = "");

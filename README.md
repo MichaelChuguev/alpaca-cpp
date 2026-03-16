@@ -1,47 +1,51 @@
 # alpaca-cpp
 
-A modern C++20 SDK for Alpaca Trading, Market Data, Broker, and Auth APIs.
+[![CI](https://github.com/MichaelChuguev/alpaca-cpp/actions/workflows/ci.yml/badge.svg)](https://github.com/MichaelChuguev/alpaca-cpp/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.cppreference.com/w/cpp/20)
+
+A modern C++20 SDK for the [Alpaca](https://alpaca.markets) Trading, Market Data, Broker, and Auth APIs.
 
 Contributions are welcome.
 
-## Why this library
+## Features
 
-- C++20-first API design with strongly typed request/response models.
-- REST clients for trading, market data, broker, and auth endpoints.
-- Real-time streaming support:
-  - Trading updates over WebSocket.
-  - Market data over WebSocket.
-  - Broker events over Server-Sent Events (SSE).
-- Financial utility types:
-  - `Decimal` fixed-point precision (8 decimal places).
-  - `DateTime` parsing/formatting for Alpaca timestamp formats.
+- **Strongly typed** request/response models for every endpoint.
+- **REST clients** for Trading, Market Data, Broker, and Auth APIs.
+- **Real-time streaming**:
+  - Trade/order updates via WebSocket.
+  - Market data (trades, quotes, bars) via WebSocket.
+  - Broker events via Server-Sent Events (SSE).
+- **Financial utility types**:
+  - `Decimal` — fixed-point precision (8 decimal places) for prices and quantities.
+  - `DateTime` — parsing/formatting for all Alpaca timestamp formats.
+- **Broker API** with both legacy key/secret and OAuth2 client-credentials auth (automatic token refresh).
+- **231 unit tests** covering model parsing, serialization, and URL/body construction.
 
-## What is included
+## API clients
 
-- `AlpacaTraderAPI` for account, orders, positions, watchlists, activities, calendar/clock, options, treasuries, and crypto wallet endpoints.
-- `AlpacaMarketDataAPI` for stocks, options, crypto, forex, fixed income, screener, news, logos, and corporate actions.
-- `AlpacaBrokerAPI` for broker account lifecycle and account-scoped trading/funding operations.
-- `AlpacaAuthAPI` for explicit OAuth2 token issuance (client credentials).
-- `AlpacaUpdatesStream` for trade/order updates.
-- `AlpacaMarketDataStream` for live market trades/quotes/bars.
-- `BrokerSSEClient` for broker event streams.
+| Class | Description |
+|---|---|
+| `AlpacaTraderAPI` | Account, orders, positions, watchlists, activities, calendar/clock, options, treasuries, crypto wallets |
+| `AlpacaMarketDataAPI` | Stocks, options, crypto, forex, fixed income, screener, news, logos, corporate actions |
+| `AlpacaBrokerAPI` | Broker account lifecycle, account-scoped trading/funding, journals, reporting, rebalancing |
+| `AlpacaAuthAPI` | OAuth2 token issuance (client credentials) |
+| `AlpacaUpdatesStream` | Real-time trade/order updates (WebSocket) |
+| `AlpacaMarketDataStream` | Real-time market data — trades, quotes, bars (WebSocket) |
+| `BrokerSSEClient` | Broker event streams (SSE with auto-reconnect) |
 
-## Quick Start
+## Quick start
 
-### 1) Requirements
+### Requirements
 
 - C++20 compiler (Clang 14+, GCC 12+, MSVC 2022+)
 - CMake 3.16+
 - OpenSSL
-- Howard Hinnant date
-- nlohmann/json (3.7.3+)
-- IXWebSocket
+- [Howard Hinnant date](https://github.com/HowardHinnant/date)
+- [nlohmann/json](https://github.com/nlohmann/json) (3.7.3+)
+- [IXWebSocket](https://github.com/machinezone/IXWebSocket) (fetched automatically if not found)
 
-Notes:
-- IXWebSocket is resolved with `find_package(ixwebsocket)` first.
-- If not found, CMake fetches IXWebSocket automatically via `FetchContent`.
-
-### 2) Install dependencies
+### Install dependencies
 
 macOS (Homebrew):
 
@@ -52,50 +56,51 @@ brew install cmake openssl howard-hinnant-date nlohmann-json
 Ubuntu / Debian:
 
 ```bash
-sudo apt install cmake libssl-dev libdate-dev nlohmann-json3-dev
+sudo apt install cmake libssl-dev nlohmann-json3-dev
 ```
 
-### 3) Configure and build
+> **Note:** Howard Hinnant `date` may need to be built from source on Linux — see the [CI workflow](.github/workflows/ci.yml) for an example.
+
+### Build
 
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ```
 
-Useful CMake options:
-
-| Option | Default | Description |
+| CMake option | Default | Description |
 |---|---|---|
-| `ALPACA_BUILD_TESTS` | `ON` | Build GoogleTest suite |
-| `ALPACA_BUILD_EXAMPLES` | `OFF` | Build examples under `example/` |
+| `ALPACA_BUILD_TESTS` | `ON` | Build the GoogleTest suite |
+| `ALPACA_BUILD_EXAMPLES` | `OFF` | Build example programs |
 
-### 4) Configure credentials
+### Set up credentials
 
 ```bash
 cp .env.example .env
+# Edit .env with your keys, then:
 source .env
 ```
 
-At minimum for Trading + Market Data examples:
+At minimum for Trading + Market Data:
 
 ```bash
 export ALPACA_API_KEY="your-api-key"
 export ALPACA_SECRET_KEY="your-secret-key"
 ```
 
-Broker credentials (choose one auth mode):
+For the Broker API (choose one mode):
 
 ```bash
-# Legacy headers auth
+# Legacy key/secret auth
 export ALPACA_BROKER_API_KEY="your-broker-key"
 export ALPACA_BROKER_API_SECRET="your-broker-secret"
 
-# Client credentials auth (recommended)
+# Client credentials auth (recommended — automatic token refresh)
 export ALPACA_BROKER_CLIENT_ID="your-client-id"
 export ALPACA_BROKER_CLIENT_SECRET="your-client-secret"
 ```
 
-### 5) Build and run examples
+### Run examples
 
 ```bash
 cmake -S . -B build -DALPACA_BUILD_EXAMPLES=ON
@@ -104,25 +109,12 @@ cmake --build build
 ./build/example/simple_example
 ./build/example/stock_data_example
 ./build/example/websocket_example
-./build/example/broker_sse_example
+./build/example/broker_get_accounts_example
 ```
 
-## Installation and CMake package usage
+See [`example/`](example/) for the full list.
 
-Install to your prefix:
-
-```bash
-cmake --build build --target install
-```
-
-Consume from another CMake project:
-
-```cmake
-find_package(alpaca-cpp REQUIRED)
-target_link_libraries(your_target PRIVATE alpaca::alpaca-cpp)
-```
-
-## Usage Guide
+## Usage
 
 ### Trading API
 
@@ -159,7 +151,7 @@ int main() {
 }
 ```
 
-### Broker API auth modes
+### Broker API
 
 Legacy auth:
 
@@ -171,6 +163,8 @@ alpaca::AlpacaBrokerAPI broker(
     std::getenv("ALPACA_BROKER_API_SECRET"),
     alpaca::BrokerAPIEndpoint::SANDBOX
 );
+
+auto accounts = broker.get_accounts();
 ```
 
 Client-credentials auth (recommended):
@@ -184,67 +178,41 @@ alpaca::AlpacaBrokerAPI broker(
     alpaca::BrokerAPIEndpoint::SANDBOX,
     alpaca::BrokerAuthMode::CLIENT_CREDENTIALS
 );
+
+auto accounts = broker.get_accounts();
 ```
 
-Notes:
-- In client-credentials mode, Bearer token retrieval and refresh are handled automatically inside the HTTP client.
-- Use `AlpacaAuthAPI` if you need explicit token payload access.
+> In client-credentials mode, Bearer token retrieval and refresh are handled automatically inside the HTTP client. Use `AlpacaAuthAPI` if you need explicit access to the token payload.
 
-### Streaming APIs
+### Streaming
 
-- Trading updates stream: `AlpacaUpdatesStream` (binary WS frames).
-- Market data stream: `AlpacaMarketDataStream` (JSON text WS frames).
-- Broker events stream: `BrokerSSEClient` (SSE with reconnect support).
+| Stream | Transport | Example |
+|---|---|---|
+| Trade/order updates | Binary WebSocket | [`websocket_example.cpp`](example/websocket_example.cpp) |
+| Market data | JSON WebSocket | [`websocket_example.cpp`](example/websocket_example.cpp) |
+| Broker events | SSE (auto-reconnect) | [`broker_sse_example.cpp`](example/broker_sse_example.cpp) |
 
-See the runnable examples:
-- `example/websocket_example.cpp`
-- `example/broker_sse_example.cpp`
+## Installation
 
-## API Surface At a Glance
+Install to a prefix:
 
-Public entry headers:
+```bash
+cmake --build build --target install
+```
 
-- `include/alpaca/AlpacaTraderAPI.h`
-- `include/alpaca/AlpacaMarketDataAPI.h`
-- `include/alpaca/AlpacaBrokerAPI.h`
-- `include/alpaca/AlpacaAuthAPI.h`
-- `include/alpaca/AlpacaUpdatesStream.h`
-- `include/alpaca/AlpacaMarketDataStream.h`
-- `include/alpaca/BrokerSSEClient.h`
-- `include/alpaca/core/types.h`
+Consume from another CMake project:
 
-Trader API categories:
-- Account/config
-- Assets/options/treasuries
-- Orders/positions/portfolio history
-- Watchlists and account activities
-- Calendar/clock
-- Crypto wallets/transfers/whitelist
-
-Market Data API categories:
-- Stocks (trades/quotes/bars/auctions/snapshots/meta)
-- Options (bars/trades/latest quotes/snapshots/chain/meta)
-- Crypto (bars/trades/quotes/orderbooks/snapshots)
-- Forex, fixed income, logos
-- Screener, news, corporate actions
-
-Broker API coverage:
-- Account lifecycle and documents
-- Account-scoped trading and funding
-- Journals, reporting, rebalancing, SSE subscriptions
-- Account-scoped crypto funding wallet flows
+```cmake
+find_package(alpaca-cpp REQUIRED)
+target_link_libraries(your_target PRIVATE alpaca::alpaca-cpp)
+```
 
 ## Testing
-
-This repo includes 231 GoogleTest unit tests covering model parsing/serialization and a large set of URL/body construction paths.
-
-Build and run tests:
 
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build
 
-./build/test/alpaca-tests
 cd build && ctest --output-on-failure
 ```
 
@@ -254,63 +222,39 @@ Run a subset:
 ./build/test/alpaca-tests --gtest_filter="TraderAPIURLTest.*"
 ```
 
-## Project Layout
+## Project layout
 
-```text
-include/alpaca/
-  AlpacaTraderAPI.h
-  AlpacaMarketDataAPI.h
-  AlpacaBrokerAPI.h
-  AlpacaAuthAPI.h
-  AlpacaUpdatesStream.h
-  AlpacaMarketDataStream.h
-  BrokerSSEClient.h
-  api/
-    rest/          # Internal REST transport headers (e.g., HTTPClient)
-    websocket/     # Internal WebSocket transport headers
-    sse/           # Internal SSE transport headers
-  core/            # Decimal, DateTime, enums, errors, helpers
-  model/           # Trader/data/stream/broker model types
-
-src/
-  api/rest/        # HTTP client implementation
-  api/websocket/   # WebSocket stream implementations
-  api/sse/         # SSE implementation
-  trader/          # Trader API implementation
-  marketdata/      # Market data API implementation
-  broker/          # Broker API implementation
-  auth/            # Auth API implementation
-
-example/           # End-to-end runnable examples
-test/              # GoogleTest suites
-cmake/             # Package config templates
 ```
+include/alpaca/
+  AlpacaTraderAPI.h          # Trading API client
+  AlpacaMarketDataAPI.h      # Market Data API client
+  AlpacaBrokerAPI.h          # Broker API client
+  AlpacaAuthAPI.h            # Auth API client
+  AlpacaUpdatesStream.h      # Trade updates WebSocket stream
+  AlpacaMarketDataStream.h   # Market data WebSocket stream
+  BrokerSSEClient.h          # Broker SSE event stream
+  api/rest/                  # HTTP transport
+  api/websocket/             # WebSocket transport
+  core/                      # Decimal, DateTime, enums, errors, helpers
+  model/                     # All typed request/response models
+    trader/                  #   Trading models
+    data/                    #   Market data models
+    stream/                  #   Stream event models
+    broker/                  #   Broker models
 
-## Migration Note
-
-- The old entrypoint (`AlpacaAPI.h` / `AlpacaAPI.cpp`) has been removed.
-- Use specialized APIs directly (`AlpacaTraderAPI`, `AlpacaMarketDataAPI`, `AlpacaBrokerAPI`, streams).
+src/                         # Implementation files
+example/                     # Runnable examples
+test/                        # GoogleTest suites
+cmake/                       # CMake package config templates
+```
 
 ## Troubleshooting
 
-`401 Unauthorized`:
-- Verify you are using the correct endpoint (paper/live/sandbox/production) for your credentials.
-- Check env vars are exported in the current shell.
+**401 Unauthorized** — verify you are using the correct endpoint (paper / live / sandbox / production) for your credentials and that env vars are exported in the current shell.
 
-`find_package(alpaca-cpp)` not found:
-- Install the library (`cmake --build build --target install`) or point CMake to your build/install prefix.
+**`find_package(alpaca-cpp)` not found** — install the library first (`cmake --build build --target install`) or point `CMAKE_PREFIX_PATH` to your install prefix.
 
-Examples fail to connect:
-- Confirm your network and TLS trust store are available.
-- For stream testing outside market hours, use the `TEST` market-data feed in `websocket_example.cpp`.
-
-## Contributing
-
-1. Fork the repository.
-2. Create a feature branch.
-3. Add or update tests for your changes.
-4. Ensure tests pass.
-5. Open a pull request.
+**Stream examples fail to connect** — confirm network access and TLS trust store availability. For testing outside market hours, use the `TEST` feed in `websocket_example.cpp`.
 
 ## License
 
