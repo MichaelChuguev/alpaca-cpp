@@ -102,7 +102,7 @@ std::vector<OptionsApproval> AlpacaBrokerAPI::get_options_approvals_requests(con
     return parse_array<OptionsApproval>(j["options_approvals"]);
 }
 
-std::vector<BrokerActivity> AlpacaBrokerAPI::get_account_activities(const std::string& account_id, const std::vector<ActivityType>& activity_types, ActivityCategory category, const DateTime& date, const DateTime& until, const DateTime& after, Sort direction, int page_size, const std::string& page_token) {
+std::vector<BrokerAccountActivity> AlpacaBrokerAPI::get_account_activities(const std::string& account_id, const std::vector<ActivityType>& activity_types, ActivityCategory category, const DateTime& date, const DateTime& until, const DateTime& after, Sort direction, int page_size, const std::string& page_token) {
     auto qb = QueryBuilder("/v1/accounts/activities")
         .add("account_id", account_id)
         .add("direction", sort_to_string(direction))
@@ -121,10 +121,10 @@ std::vector<BrokerActivity> AlpacaBrokerAPI::get_account_activities(const std::s
     if (until.is_date_only()) qb.add("until", until.to_iso_string());
     if (after.is_date_only()) qb.add("after", after.to_iso_string());
 
-    return parse_array<BrokerActivity>(httpClient.get(qb.build()));
+    return parse_array<BrokerAccountActivity>(httpClient.get(qb.build()));
 }
 
-std::vector<BrokerActivity> AlpacaBrokerAPI::get_account_activities_by_type(ActivityType activity_type, const std::string& account_id, const DateTime& date, const DateTime& until, const DateTime& after, Sort direction, int page_size, const std::string& page_token) {
+std::vector<BrokerAccountActivity> AlpacaBrokerAPI::get_account_activities_by_type(ActivityType activity_type, const std::string& account_id, const DateTime& date, const DateTime& until, const DateTime& after, Sort direction, int page_size, const std::string& page_token) {
     auto qb = QueryBuilder("/v1/accounts/activities/" + activity_type_to_string(activity_type))
         .add("account_id", account_id)
         .add("direction", sort_to_string(direction))
@@ -135,7 +135,7 @@ std::vector<BrokerActivity> AlpacaBrokerAPI::get_account_activities_by_type(Acti
     if (until.is_date_only()) qb.add("until", until.to_iso_string());
     if (after.is_date_only()) qb.add("after", after.to_iso_string());
 
-    return parse_array<BrokerActivity>(httpClient.get(qb.build()));
+    return parse_array<BrokerAccountActivity>(httpClient.get(qb.build()));
 }
 
 Account AlpacaBrokerAPI::get_trading_account(const std::string& account_id) {
