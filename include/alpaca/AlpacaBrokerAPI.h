@@ -12,6 +12,7 @@
 #include "alpaca/model/broker/common.h"
 #include "alpaca/model/broker/brokerAccount.h"
 #include "alpaca/model/broker/optionsApproval.h"
+#include "alpaca/model/broker/brokerAccountActivity.h"
 #include "alpaca/model/trader/account.h"
 #include "alpaca/model/trader/activity.h"
 #include "alpaca/model/trader/asset.h"
@@ -94,8 +95,8 @@ public:
     * REJECTED
     */
     std::vector<OptionsApproval> get_options_approvals_requests(const std::string& account_id = "", int requested_level = -1, int approved_level = -1, OptionsApprovalStatus status = OptionsApprovalStatus::UNSET, int page_size = -1, const std::string& page_token = "");
-    std::vector<BrokerEntity> get_account_activities(const std::string& query = "");
-    std::vector<BrokerEntity> get_account_activities_by_type(const std::string& activity_type, const std::string& query = "");
+    std::vector<BrokerAccountActivity> get_account_activities(const std::string& account_id = "", const std::vector<ActivityType>& activity_types = {}, ActivityCategory category = ActivityCategory::UNSET, const DateTime& date = DateTime(), const DateTime& until = DateTime(), const DateTime& after = DateTime(), Sort direction = Sort::DESC, int page_size = -1, const std::string& page_token = "");
+    std::vector<BrokerAccountActivity> get_account_activities_by_type(ActivityType activity_type, const std::string& account_id = "", const DateTime& date = DateTime(), const DateTime& until = DateTime(), const DateTime& after = DateTime(), Sort direction = Sort::DESC, int page_size = -1, const std::string& page_token = "");
     Account get_trading_account(const std::string& account_id);
     BrokerEntity get_pdt_status(const std::string& account_id);
     BrokerEntity pdt_one_time_removal(const std::string& account_id);

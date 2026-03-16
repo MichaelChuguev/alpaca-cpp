@@ -102,12 +102,40 @@ std::vector<OptionsApproval> AlpacaBrokerAPI::get_options_approvals_requests(con
     return parse_array<OptionsApproval>(j["options_approvals"]);
 }
 
-std::vector<BrokerEntity> AlpacaBrokerAPI::get_account_activities(const std::string& query) {
-    return parse_array<BrokerEntity>(httpClient.get(with_query("/v1/accounts/activities", query)));
+std::vector<BrokerActivity> AlpacaBrokerAPI::get_account_activities(const std::string& account_id, const std::vector<ActivityType>& activity_types, ActivityCategory category, const DateTime& date, const DateTime& until, const DateTime& after, Sort direction, int page_size, const std::string& page_token) {
+    auto qb = QueryBuilder("/v1/accounts/activities")
+        .add("account_id", account_id)
+        .add("direction", sort_to_string(direction))
+        .add("page_token", page_token);
+
+    if (!activity_types.empty()) {
+        std::vector<std::string> type_strings;
+        type_strings.reserve(activity_types.size());
+        for (const auto& t : activity_types) type_strings.push_back(activity_type_to_string(t));
+        qb.add_list("activity_types", type_strings);
+    }
+
+    if (category != ActivityCategory::UNSET) qb.add("category", activity_category_to_string(category));
+    if (page_size > 0) qb.add("page_size", page_size);
+    if (date.is_date_only()) qb.add("date", date.to_iso_string());
+    if (until.is_date_only()) qb.add("until", until.to_iso_string());
+    if (after.is_date_only()) qb.add("after", after.to_iso_string());
+
+    return parse_array<BrokerActivity>(httpClient.get(qb.build()));
 }
 
-std::vector<BrokerEntity> AlpacaBrokerAPI::get_account_activities_by_type(const std::string& activity_type, const std::string& query) {
-    return parse_array<BrokerEntity>(httpClient.get(with_query("/v1/accounts/activities/" + activity_type, query)));
+std::vector<BrokerActivity> AlpacaBrokerAPI::get_account_activities_by_type(ActivityType activity_type, const std::string& account_id, const DateTime& date, const DateTime& until, const DateTime& after, Sort direction, int page_size, const std::string& page_token) {
+    auto qb = QueryBuilder("/v1/accounts/activities/" + activity_type_to_string(activity_type))
+        .add("account_id", account_id)
+        .add("direction", sort_to_string(direction))
+        .add("page_token", page_token);
+
+    if (page_size > 0) qb.add("page_size", page_size);
+    if (date.is_date_only()) qb.add("date", date.to_iso_string());
+    if (until.is_date_only()) qb.add("until", until.to_iso_string());
+    if (after.is_date_only()) qb.add("after", after.to_iso_string());
+
+    return parse_array<BrokerActivity>(httpClient.get(qb.build()));
 }
 
 Account AlpacaBrokerAPI::get_trading_account(const std::string& account_id) {

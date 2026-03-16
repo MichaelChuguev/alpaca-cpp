@@ -1,6 +1,5 @@
 # alpaca-cpp
 
-[![CI](https://github.com/MichaelChuguev/alpaca-cpp/actions/workflows/ci.yml/badge.svg)](https://github.com/MichaelChuguev/alpaca-cpp/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.cppreference.com/w/cpp/20)
 
