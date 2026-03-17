@@ -29,7 +29,7 @@ include(FetchContent)
 set(ALPACA_USE_BUNDLED_IXWEBSOCKET OFF)
 
 find_package(ixwebsocket QUIET)
-if(NOT ixwebsocket_FOUND)
+if(NOT ixwebsocket_FOUND OR (NOT TARGET ixwebsocket::ixwebsocket AND NOT TARGET ixwebsocket))
     message(STATUS "IXWebSocket not found via find_package – fetching from GitHub")
     # Use OpenSSL (already found above) as the TLS backend.
     set(USE_TLS             ON  CACHE BOOL "" FORCE)

@@ -58,8 +58,6 @@ Ubuntu / Debian:
 sudo apt install cmake libssl-dev nlohmann-json3-dev
 ```
 
-> **Note:** Howard Hinnant `date` may need to be built from source on Linux — see the [CI workflow](.github/workflows/ci.yml) for an example.
-
 ### Build
 
 ```bash

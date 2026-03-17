@@ -158,20 +158,29 @@ BrokerEntity AlpacaBrokerAPI::close_account(const std::string& account_id, const
 // Account Documents
 // ---------------------------------------------------------------------------
 
-std::vector<BrokerEntity> AlpacaBrokerAPI::get_docs_for_account(const std::string& account_id) {
-    return parse_array<BrokerEntity>(httpClient.get("/v1/accounts/" + account_id + "/documents"));
+std::vector<BrokerAccountDocument> AlpacaBrokerAPI::get_docs_for_account(const std::string& account_id, BrokerAccountDocumentType type, const DateTime& start, const DateTime& end, const std::string& page_token) {
+    auto qb = QueryBuilder("/v1/accounts/" + account_id + "/documents")
+        .add("type", broker_account_document_type_to_string(type))
+        .add("page_token", page_token);
+
+    if (start.to_epoch_seconds() > 0) qb.add("start", start.to_iso_string());
+    if (end.to_epoch_seconds() > 0) qb.add("end", end.to_iso_string());
+
+    return parse_array<BrokerAccountDocument>(httpClient.get(qb.build()));
 }
 
-BrokerEntity AlpacaBrokerAPI::upload_doc_to_account(const std::string& account_id, const json& request) {
-    return BrokerEntity(httpClient.post("/v1/accounts/" + account_id + "/documents/upload", request));
+std::vector<BrokerAccountDocument> AlpacaBrokerAPI::upload_doc_to_account(const std::string& account_id, const std::vector<BrokerDocumentUploadRequest>& documents) {
+    json body = json::array();
+    for (const auto& doc : documents) body.push_back(doc.to_json());
+    return parse_array<BrokerAccountDocument>(httpClient.post("/v1/accounts/" + account_id + "/documents/upload", body));
 }
 
-BrokerEntity AlpacaBrokerAPI::download_doc_from_account(const std::string& account_id, const std::string& document_id) {
-    return BrokerEntity(httpClient.get("/v1/accounts/" + account_id + "/documents/" + document_id + "/download"));
+BrokerAccountDocument AlpacaBrokerAPI::download_doc_from_account(const std::string& account_id, const std::string& document_id) {
+    return BrokerAccountDocument(httpClient.get("/v1/accounts/" + account_id + "/documents/" + document_id + "/download"));
 }
 
-BrokerEntity AlpacaBrokerAPI::download_w8ben_doc_from_account(const std::string& account_id, const std::string& document_id) {
-    return BrokerEntity(httpClient.get("/v1/accounts/" + account_id + "/documents/w8ben/" + document_id + "/download"));
+BrokerAccountDocument AlpacaBrokerAPI::download_w8ben_doc_from_account(const std::string& account_id, const std::string& document_id) {
+    return BrokerAccountDocument(httpClient.get("/v1/accounts/" + account_id + "/documents/w8ben/" + document_id + "/download"));
 }
 
 // ---------------------------------------------------------------------------

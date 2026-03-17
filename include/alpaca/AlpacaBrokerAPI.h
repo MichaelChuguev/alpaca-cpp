@@ -14,6 +14,7 @@
 #include "alpaca/model/broker/optionsApproval.h"
 #include "alpaca/model/broker/brokerAccountActivity.h"
 #include "alpaca/model/broker/pdtStatus.h"
+#include "alpaca/model/broker/brokerAccountDocument.h"
 #include "alpaca/model/trader/account.h"
 #include "alpaca/model/trader/activity.h"
 #include "alpaca/model/trader/asset.h"
@@ -108,10 +109,10 @@ public:
     BrokerEntity close_account(const std::string& account_id, const json& request = json::object());
 
     // ── Account Documents ────────────────────────────────────────────────
-    std::vector<BrokerEntity> get_docs_for_account(const std::string& account_id);
-    BrokerEntity upload_doc_to_account(const std::string& account_id, const json& request);
-    BrokerEntity download_doc_from_account(const std::string& account_id, const std::string& document_id);
-    BrokerEntity download_w8ben_doc_from_account(const std::string& account_id, const std::string& document_id);
+    std::vector<BrokerAccountDocument> get_docs_for_account(const std::string& account_id, BrokerAccountDocumentType type = BrokerAccountDocumentType::UNSET, const DateTime& start = DateTime(), const DateTime& end = DateTime(), const std::string& page_token = "");
+    std::vector<BrokerAccountDocument> upload_doc_to_account(const std::string& account_id, const std::vector<BrokerDocumentUploadRequest>& documents);
+    BrokerAccountDocument download_doc_from_account(const std::string& account_id, const std::string& document_id);
+    BrokerAccountDocument download_w8ben_doc_from_account(const std::string& account_id, const std::string& document_id);
 
     // ── Trading: Positions ───────────────────────────────────────────────
     std::vector<Position> get_positions_for_account(const std::string& account_id);
