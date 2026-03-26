@@ -97,4 +97,52 @@ struct StreamBar {
     }
 };
 
+/// A single real-time option trade.
+struct StreamOptionTrade {
+    std::string symbol;        // "S"
+    Decimal     price{};       // "p"
+    Decimal     size{};        // "s"
+    DateTime    timestamp;     // "t"
+    std::string exchange;      // "x"
+    std::string condition;     // "c"
+
+    static StreamOptionTrade from_json(const nlohmann::json& j) {
+        StreamOptionTrade t;
+        t.symbol    = parse_string(j, "S");
+        t.price     = parse_decimal(j, "p");
+        t.size      = parse_decimal(j, "s");
+        t.timestamp = parse_datetime(j, "t");
+        t.exchange  = parse_string(j, "x");
+        t.condition = parse_string(j, "c");
+        return t;
+    }
+};
+
+/// A single real-time option quote.
+struct StreamOptionQuote {
+    std::string symbol;        // "S"
+    Decimal     bid_price{};   // "bp"
+    Decimal     bid_size{};    // "bs"
+    std::string bid_exchange;  // "bx"
+    Decimal     ask_price{};   // "ap"
+    Decimal     ask_size{};    // "as"
+    std::string ask_exchange;  // "ax"
+    DateTime    timestamp;     // "t"
+    std::string condition;     // "c"
+
+    static StreamOptionQuote from_json(const nlohmann::json& j) {
+        StreamOptionQuote q;
+        q.symbol       = parse_string(j, "S");
+        q.bid_price    = parse_decimal(j, "bp");
+        q.bid_size     = parse_decimal(j, "bs");
+        q.bid_exchange = parse_string(j, "bx");
+        q.ask_price    = parse_decimal(j, "ap");
+        q.ask_size     = parse_decimal(j, "as");
+        q.ask_exchange = parse_string(j, "ax");
+        q.timestamp    = parse_datetime(j, "t");
+        q.condition    = parse_string(j, "c");
+        return q;
+    }
+};
+
 } // namespace alpaca

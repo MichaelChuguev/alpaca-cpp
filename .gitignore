@@ -1,5 +1,5 @@
 # Build directories
-build/
+build*/
 example/build/
 test/build/
 install/
@@ -61,6 +61,12 @@ test_results/
 test_output/
 *_test
 *Test
+# On case-insensitive filesystems, *Test also matches the top-level test/
+# source tree. Re-include repository tests, then keep generated build output
+# under test/ ignored.
+!/test/
+!/test/**
+/test/build/
 
 # Coverage
 *.gcda

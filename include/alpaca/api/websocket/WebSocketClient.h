@@ -7,6 +7,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <chrono>
+#include <map>
 
 #include "ixwebsocket/IXWebSocket.h"
 #include "nlohmann/json.hpp"
@@ -52,8 +53,14 @@ public:
     /// Send a JSON message (text or binary depending on constructor flag).
     void send(const nlohmann::json& msg);
 
+    /// Send a JSON message encoded as MessagePack.
+    void send_msgpack(const nlohmann::json& msg);
+
     /// Send a raw string message.
     void send_raw(const std::string& msg);
+
+    /// Set extra HTTP headers to include in the WebSocket handshake.
+    void set_extra_headers(const std::map<std::string, std::string>& headers);
 
     /// @return Current connection state.
     State state() const noexcept { return state_.load(); }
@@ -101,6 +108,7 @@ private:
     std::string host_;
     std::string target_;
     bool        use_binary_;
+    ix::WebSocketHttpHeaders extra_headers_;
 
     // ── IXWebSocket object (owns its own I/O thread) ─────────────────────
     ix::WebSocket ws_;

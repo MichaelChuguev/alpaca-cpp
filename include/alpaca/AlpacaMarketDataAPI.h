@@ -25,12 +25,18 @@ protected:
     std::string keySecret;
     MarketDataEndpoint marketDataEndpoint;
     DataFeed defaultDataFeed;
+    OptionFeed defaultOptionFeed;
 
     HttpClient httpClient;
 
     /** Resolve DataFeed::DEFAULT to the stored default. */
     DataFeed resolve_feed(DataFeed feed) const {
         return feed == DataFeed::DEFAULT ? defaultDataFeed : feed;
+    }
+
+    /** Resolve OptionFeed::DEFAULT to the stored default. */
+    OptionFeed resolve_option_feed(OptionFeed feed) const {
+        return feed == OptionFeed::DEFAULT ? defaultOptionFeed : feed;
     }
 
 public:
@@ -42,14 +48,17 @@ public:
      * @param keySecret             the API secret key
      * @param marketDataEndpoint    the MarketDataEndpoint (SANDBOX or LIVE)
      * @param defaultDataFeed       the default DataFeed for stock endpoints (IEX, SIP, etc.)
+     * @param defaultOptionFeed     the default OptionFeed for option snapshot/latest endpoints
      */
     AlpacaMarketDataAPI(const std::string& keyID, const std::string& keySecret,
                         const MarketDataEndpoint& marketDataEndpoint,
-                        DataFeed defaultDataFeed = DataFeed::IEX)
+                        DataFeed defaultDataFeed = DataFeed::IEX,
+                        OptionFeed defaultOptionFeed = OptionFeed::DEFAULT)
         : keyID(keyID),
           keySecret(keySecret),
           marketDataEndpoint(marketDataEndpoint),
           defaultDataFeed(defaultDataFeed),
+          defaultOptionFeed(defaultOptionFeed),
           httpClient(keyID, keySecret, marketDataEndpoint)
     {}
 
@@ -218,21 +227,25 @@ public:
         int limit = 0, const std::string& page_token = "",
         Sort sort = Sort::ASC);
 
-    /** Option latest trades (multi-symbol). */
+    /** Option latest trades (multi-symbol). Supports option feed selection. */
     std::map<std::string, OptionTrade> get_option_latest_trades(
-        const std::vector<std::string>& symbols);
+        const std::vector<std::string>& symbols,
+        OptionFeed feed = OptionFeed::DEFAULT);
 
-    /** Option latest quotes (multi-symbol). */
+    /** Option latest quotes (multi-symbol). Supports option feed selection. */
     std::map<std::string, OptionQuote> get_option_latest_quotes(
-        const std::vector<std::string>& symbols);
+        const std::vector<std::string>& symbols,
+        OptionFeed feed = OptionFeed::DEFAULT);
 
-    /** Option snapshots (multi-symbol). */
+    /** Option snapshots (multi-symbol). Supports option feed selection. */
     std::map<std::string, OptionSnapshot> get_option_snapshots(
-        const std::vector<std::string>& symbols);
+        const std::vector<std::string>& symbols,
+        OptionFeed feed = OptionFeed::DEFAULT);
 
-    /** Option chain (by underlying symbol). */
+    /** Option chain (by underlying symbol). Supports option feed selection. */
     std::map<std::string, OptionSnapshot> get_option_chain(
-        const std::string& underlying_symbol);
+        const std::string& underlying_symbol,
+        OptionFeed feed = OptionFeed::DEFAULT);
 
     /** Option meta conditions for a given tick type. */
     std::map<std::string, std::string> get_option_meta_conditions(TickType tick_type);

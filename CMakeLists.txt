@@ -6,6 +6,10 @@ project(alpaca-cpp
     DESCRIPTION "C++ client library for Alpaca API"
 )
 
+# Export compile_commands.json so editors can resolve generated dependencies
+# such as FetchContent-provided IXWebSocket headers.
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -29,6 +33,26 @@ include(FetchContent)
 set(ALPACA_USE_BUNDLED_IXWEBSOCKET OFF)
 
 find_package(ixwebsocket QUIET)
+if(NOT ixwebsocket_FOUND AND NOT TARGET ixwebsocket::ixwebsocket AND NOT TARGET ixwebsocket)
+    find_path(ALPACA_IXWEBSOCKET_INCLUDE_DIR
+        NAMES ixwebsocket/IXWebSocket.h
+        PATH_SUFFIXES include
+    )
+    find_library(ALPACA_IXWEBSOCKET_LIBRARY
+        NAMES ixwebsocket
+        PATH_SUFFIXES lib
+    )
+
+    if(ALPACA_IXWEBSOCKET_INCLUDE_DIR AND ALPACA_IXWEBSOCKET_LIBRARY)
+        add_library(ixwebsocket STATIC IMPORTED GLOBAL)
+        set_target_properties(ixwebsocket PROPERTIES
+            IMPORTED_LOCATION "${ALPACA_IXWEBSOCKET_LIBRARY}"
+            INTERFACE_INCLUDE_DIRECTORIES "${ALPACA_IXWEBSOCKET_INCLUDE_DIR}"
+        )
+        add_library(ixwebsocket::ixwebsocket ALIAS ixwebsocket)
+        set(ixwebsocket_FOUND ON)
+    endif()
+endif()
 if(NOT ixwebsocket_FOUND OR (NOT TARGET ixwebsocket::ixwebsocket AND NOT TARGET ixwebsocket))
     message(STATUS "IXWebSocket not found via find_package – fetching from GitHub")
     # Use OpenSSL (already found above) as the TLS backend.
@@ -107,6 +131,18 @@ install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/alpaca-cppConfigVersion.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/alpaca-cpp
 )
+
+# Clean up stale duplicate export files that some local installs accumulated
+# with names like "alpaca-cppTargets 2.cmake". Those files break consumer
+# find_package() because the generated targets file glob-loads every
+# alpaca-cppTargets-*.cmake sibling.
+install(CODE [[
+    file(GLOB _alpaca_duplicate_exports
+        "${CMAKE_INSTALL_PREFIX}/lib/cmake/alpaca-cpp/* [0-9].cmake")
+    foreach(_dup IN LISTS _alpaca_duplicate_exports)
+        file(REMOVE "${_dup}")
+    endforeach()
+]])
 
 # Export targets for build tree (allows using library without installing)
 export(EXPORT alpaca-cpp-targets

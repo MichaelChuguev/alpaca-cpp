@@ -32,6 +32,7 @@ void WebSocketClient::connect() {
     if (state_ != State::DISCONNECTED && state_ != State::ERROR) return;
 
     set_state(State::CONNECTING);
+    ws_.setExtraHeaders(extra_headers_);
     ws_.setUrl("wss://" + host_ + target_);
     ws_.start();
 }
@@ -45,6 +46,11 @@ void WebSocketClient::send(const nlohmann::json& msg) {
     send_raw(msg.dump());
 }
 
+void WebSocketClient::send_msgpack(const nlohmann::json& msg) {
+    const auto packed = nlohmann::json::to_msgpack(msg);
+    send_raw(std::string(packed.begin(), packed.end()));
+}
+
 void WebSocketClient::send_raw(const std::string& msg) {
     // ix::WebSocket::send() / sendBinary() are thread-safe.
     if (use_binary_) {
@@ -52,6 +58,11 @@ void WebSocketClient::send_raw(const std::string& msg) {
     } else {
         ws_.send(msg);
     }
+}
+
+void WebSocketClient::set_extra_headers(const std::map<std::string, std::string>& headers) {
+    extra_headers_ = ix::WebSocketHttpHeaders(headers.begin(), headers.end());
+    ws_.setExtraHeaders(extra_headers_);
 }
 
 bool WebSocketClient::wait_for_state(State target, std::chrono::milliseconds timeout) {

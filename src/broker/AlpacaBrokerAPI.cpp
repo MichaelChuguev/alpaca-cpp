@@ -227,8 +227,8 @@ OrderResponse AlpacaBrokerAPI::get_order_for_account(const std::string& account_
     return OrderResponse(httpClient.get(endpoint));
 }
 
-OrderResponse AlpacaBrokerAPI::replace_order_for_account(const std::string& account_id, const std::string& order_id, const json& patch_request) {
-    return OrderResponse(httpClient.patch("/v1/trading/accounts/" + account_id + "/orders/" + order_id, patch_request));
+OrderResponse AlpacaBrokerAPI::replace_order_for_account(const std::string& account_id, const std::string& order_id, const ReplaceOrder& replace_request) {
+    return OrderResponse(httpClient.patch("/v1/trading/accounts/" + account_id + "/orders/" + order_id, replace_request.to_json()));
 }
 
 void AlpacaBrokerAPI::delete_order_for_account(const std::string& account_id, const std::string& order_id) {
@@ -270,8 +270,8 @@ std::map<std::string, int> AlpacaBrokerAPI::delete_all_orders_for_account(const 
     return result;
 }
 
-BrokerEntity AlpacaBrokerAPI::get_order_estimation_for_account(const std::string& account_id, const json& order_request) {
-    return BrokerEntity(httpClient.post("/v1/trading/accounts/" + account_id + "/orders/estimation", order_request));
+OrderResponse AlpacaBrokerAPI::get_order_estimation_for_account(const std::string& account_id, const Order& order) {
+    return OrderResponse(httpClient.post("/v1/trading/accounts/" + account_id + "/orders/estimation", order.to_json()));
 }
 
 // ---------------------------------------------------------------------------

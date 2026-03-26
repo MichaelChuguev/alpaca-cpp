@@ -150,6 +150,7 @@ enum class DataTimeframe {
     ONE_HOUR, ONE_DAY, ONE_WEEK, ONE_MONTH
 };
 enum class DataFeed { IEX, SIP, OTC, DEFAULT };
+enum class OptionFeed { INDICATIVE, OPRA, DEFAULT };
 enum class CryptoLoc { US };
 enum class ScreenerMarketType { STOCKS, CRYPTO };
 enum class TickType { TRADES, QUOTES };

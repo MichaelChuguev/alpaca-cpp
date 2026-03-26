@@ -103,6 +103,9 @@ public:
     */
     std::vector<BrokerAccountActivity> get_account_activities(const std::string& account_id = "", const std::vector<ActivityType>& activity_types = {}, ActivityCategory category = ActivityCategory::UNSET, const DateTime& date = DateTime(), const DateTime& until = DateTime(), const DateTime& after = DateTime(), Sort direction = Sort::DESC, int page_size = -1, const std::string& page_token = "");
     std::vector<BrokerAccountActivity> get_account_activities_by_type(ActivityType activity_type, const std::string& account_id = "", const DateTime& date = DateTime(), const DateTime& until = DateTime(), const DateTime& after = DateTime(), Sort direction = Sort::DESC, int page_size = -1, const std::string& page_token = "");
+    //Should be BrokerAccount instead of Account ?
+    //retreive trading details for account.
+    //get_trading_details()
     Account get_trading_account(const std::string& account_id);
     PDTStatus get_pdt_status(const std::string& account_id);
     PDTStatus pdt_one_time_removal(const std::string& account_id);
@@ -124,13 +127,13 @@ public:
 
     // ── Trading: Orders ──────────────────────────────────────────────────
     OrderResponse get_order_for_account(const std::string& account_id, const std::string& order_id, bool nested = false);
-    OrderResponse replace_order_for_account(const std::string& account_id, const std::string& order_id, const json& patch_request);
+    OrderResponse replace_order_for_account(const std::string& account_id, const std::string& order_id, const ReplaceOrder& replace_request);
     void delete_order_for_account(const std::string& account_id, const std::string& order_id);
     std::vector<OrderResponse> get_all_orders_for_account(const std::string& account_id, OrderStatus status = OrderStatus::OPEN, int limit = 100, const DateTime& after = DateTime(), const DateTime& until = DateTime(), Sort direction = Sort::DESC, bool nested = false, const std::vector<std::string>& symbols = {});
     OrderResponse get_order_by_client_order_id_for_account(const std::string& account_id, const std::string& client_order_id);
     OrderResponse create_order_for_account(const std::string& account_id, const Order& order);
     std::map<std::string, int> delete_all_orders_for_account(const std::string& account_id);
-    BrokerEntity get_order_estimation_for_account(const std::string& account_id, const json& order_request);
+    OrderResponse get_order_estimation_for_account(const std::string& account_id, const Order& order);
 
     // ── Trading: Account Config / Limits / Portfolio ────────────────────
     AccountConfig patch_trading_account_configurations(const std::string& account_id, const AccountConfig& config);

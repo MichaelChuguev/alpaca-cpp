@@ -37,7 +37,8 @@ int main() {
         // 2. Get latest option trades
         std::cout << "\n2. Latest option trades..." << std::endl;
         auto trades = api.get_option_latest_trades(
-            {"AAPL250321C00200000", "MSFT250321C00400000"});
+            {"AAPL250321C00200000", "MSFT250321C00400000"},
+            alpaca::OptionFeed::INDICATIVE);
         for (const auto& [sym, t] : trades) {
             std::cout << "  " << sym << "  Price: " << t.price
                       << "  Size: " << t.size << std::endl;
@@ -46,7 +47,8 @@ int main() {
         // 3. Get latest option quotes
         std::cout << "\n3. Latest option quotes..." << std::endl;
         auto quotes = api.get_option_latest_quotes(
-            {"AAPL250321C00200000", "MSFT250321C00400000"});
+            {"AAPL250321C00200000", "MSFT250321C00400000"},
+            alpaca::OptionFeed::INDICATIVE);
         for (const auto& [sym, q] : quotes) {
             std::cout << "  " << sym
                       << "  Bid: " << q.bid_price << " x " << q.bid_size
@@ -56,7 +58,8 @@ int main() {
         // 4. Get option snapshots
         std::cout << "\n4. Option snapshots..." << std::endl;
         auto snapshots = api.get_option_snapshots(
-            {"AAPL250321C00200000"});
+            {"AAPL250321C00200000"},
+            alpaca::OptionFeed::INDICATIVE);
         for (const auto& [sym, snap] : snapshots) {
             std::cout << "  " << sym << std::endl;
             std::cout << "    Latest trade price: " << snap.latest_trade.price << std::endl;
@@ -65,7 +68,7 @@ int main() {
 
         // 5. Get option chain snapshot for an underlying
         std::cout << "\n5. Option chain snapshot for AAPL..." << std::endl;
-        auto chain = api.get_option_chain("AAPL");
+        auto chain = api.get_option_chain("AAPL", alpaca::OptionFeed::INDICATIVE);
         std::cout << "  Found " << chain.size() << " contracts in chain" << std::endl;
         int count = 0;
         for (const auto& [sym, snap] : chain) {

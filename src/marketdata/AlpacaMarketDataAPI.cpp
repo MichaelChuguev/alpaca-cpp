@@ -467,10 +467,12 @@ std::map<std::string, std::vector<OptionTrade>> AlpacaMarketDataAPI::get_option_
 }
 
 std::map<std::string, OptionTrade> AlpacaMarketDataAPI::get_option_latest_trades(
-    const std::vector<std::string>& symbols) {
+    const std::vector<std::string>& symbols,
+    OptionFeed feed) {
 
     auto qb = QueryBuilder("/v1beta1/options/trades/latest")
-        .add_list("symbols", symbols);
+        .add_list("symbols", symbols)
+        .add("feed", option_feed_to_string(resolve_option_feed(feed)));
 
     json j = httpClient.get(qb.build());
 
@@ -484,10 +486,12 @@ std::map<std::string, OptionTrade> AlpacaMarketDataAPI::get_option_latest_trades
 }
 
 std::map<std::string, OptionQuote> AlpacaMarketDataAPI::get_option_latest_quotes(
-    const std::vector<std::string>& symbols) {
+    const std::vector<std::string>& symbols,
+    OptionFeed feed) {
 
     auto qb = QueryBuilder("/v1beta1/options/quotes/latest")
-        .add_list("symbols", symbols);
+        .add_list("symbols", symbols)
+        .add("feed", option_feed_to_string(resolve_option_feed(feed)));
 
     json j = httpClient.get(qb.build());
 
@@ -501,10 +505,12 @@ std::map<std::string, OptionQuote> AlpacaMarketDataAPI::get_option_latest_quotes
 }
 
 std::map<std::string, OptionSnapshot> AlpacaMarketDataAPI::get_option_snapshots(
-    const std::vector<std::string>& symbols) {
+    const std::vector<std::string>& symbols,
+    OptionFeed feed) {
 
     auto qb = QueryBuilder("/v1beta1/options/snapshots")
-        .add_list("symbols", symbols);
+        .add_list("symbols", symbols)
+        .add("feed", option_feed_to_string(resolve_option_feed(feed)));
 
     json j = httpClient.get(qb.build());
 
@@ -518,9 +524,13 @@ std::map<std::string, OptionSnapshot> AlpacaMarketDataAPI::get_option_snapshots(
 }
 
 std::map<std::string, OptionSnapshot> AlpacaMarketDataAPI::get_option_chain(
-    const std::string& underlying_symbol) {
+    const std::string& underlying_symbol,
+    OptionFeed feed) {
 
-    json j = httpClient.get("/v1beta1/options/snapshots/" + url_encode(underlying_symbol));
+    auto qb = QueryBuilder("/v1beta1/options/snapshots/" + url_encode(underlying_symbol))
+        .add("feed", option_feed_to_string(resolve_option_feed(feed)));
+
+    json j = httpClient.get(qb.build());
 
     std::map<std::string, OptionSnapshot> result;
     if (j.contains("snapshots") && j["snapshots"].is_object()) {

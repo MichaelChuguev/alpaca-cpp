@@ -309,6 +309,15 @@ inline std::string data_feed_to_string(DataFeed f) {
     return "iex";
 }
 
+inline std::string option_feed_to_string(OptionFeed f) {
+    switch (f) {
+        case OptionFeed::INDICATIVE: return "indicative";
+        case OptionFeed::OPRA: return "opra";
+        case OptionFeed::DEFAULT: return "";
+    }
+    return "";
+}
+
 inline std::string crypto_loc_to_string(CryptoLoc loc) {
     switch (loc) {
         case CryptoLoc::US: return "us";

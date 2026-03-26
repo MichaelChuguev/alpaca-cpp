@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -362,6 +363,30 @@ struct Order {
         }
     
         // Additional validations based on security type would go here
+    }
+
+};
+
+struct ReplaceOrder {
+
+    Decimal qty;
+    std::optional<OrderTimeInForce> time_in_force;
+    Decimal limit_price;
+    Decimal stop_price;
+    Decimal trail;
+    std::string client_order_id;
+
+    ReplaceOrder() = default;
+
+    json to_json() const {
+        json j;
+        if (qty > 0)                  j["qty"]            = qty.to_string();
+        if (time_in_force)            j["time_in_force"]  = time_in_force_to_string(*time_in_force);
+        if (limit_price > 0)          j["limit_price"]    = limit_price.to_string();
+        if (stop_price > 0)           j["stop_price"]     = stop_price.to_string();
+        if (trail > 0)                j["trail"]          = trail.to_string();
+        if (!client_order_id.empty()) j["client_order_id"] = client_order_id;
+        return j;
     }
 
 };
