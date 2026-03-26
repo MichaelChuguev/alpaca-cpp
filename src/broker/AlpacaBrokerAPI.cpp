@@ -138,8 +138,8 @@ std::vector<BrokerAccountActivity> AlpacaBrokerAPI::get_account_activities_by_ty
     return parse_array<BrokerAccountActivity>(httpClient.get(qb.build()));
 }
 
-Account AlpacaBrokerAPI::get_trading_account(const std::string& account_id) {
-    return Account(httpClient.get("/v1/trading/accounts/" + account_id + "/account"));
+BrokerAccountTradingDetails AlpacaBrokerAPI::get_trading_details_for_account(const std::string& account_id) {
+    return BrokerAccountTradingDetails(httpClient.get("/v1/trading/accounts/" + account_id + "/account"));
 }
 
 PDTStatus AlpacaBrokerAPI::get_pdt_status(const std::string& account_id) {

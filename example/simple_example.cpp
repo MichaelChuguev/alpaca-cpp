@@ -55,7 +55,7 @@ int main() {
         }
 
 
-    } catch (const alpaca::AlpacaTraderException& e) {
+    } catch (const alpaca::AlpacaException& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }

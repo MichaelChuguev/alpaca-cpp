@@ -49,7 +49,16 @@ inline std::string options_approval_requester_to_string(OptionsApprovalRequester
 // ---------------------------------------------------------------------------
 // OptionsApproval — model for options approval request/response
 // ---------------------------------------------------------------------------
-
+/*
+* id
+* account_id
+* created_at
+* updated_at
+* requested_level
+* approved_level
+* status: PENDING, APPROVED, LOWER_LEVEL_APPROVED, REJECTED
+* requester: CORRESPONDENT, ALPACA_ADMIN
+*/
 struct OptionsApproval {
     std::string id;
     std::string account_id;

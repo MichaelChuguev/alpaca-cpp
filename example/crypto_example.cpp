@@ -54,7 +54,7 @@ int main() {
         try {
             auto estimate = api.get_crypto_transfer_estimate("BTC", "0.001");
             std::cout << "Estimated fee: " << estimate.fee << " " << estimate.asset << std::endl;
-        } catch (const alpaca::AlpacaTraderException& e) {
+        } catch (const alpaca::AlpacaException& e) {
             std::cout << "Could not get estimate (no crypto account or insufficient balance)" << std::endl;
         }
 
@@ -82,8 +82,12 @@ int main() {
         std::cout << "Status: " << transfer.status << std::endl;
         */
 
-    } catch (const alpaca::AlpacaTraderException& e) {
-        std::cerr << "API Error: " << e.what() << " (code: " << e.code() << ")" << std::endl;
+    } catch (const alpaca::AlpacaException& e) {
+        std::cerr << "API Error: " << e.what();
+        if (const auto code = e.code()) {
+            std::cerr << " (code: " << *code << ")";
+        }
+        std::cerr << std::endl;
         return 1;
     } catch (const std::runtime_error& e) {
         std::string error_msg(e.what());

@@ -71,7 +71,7 @@ int main() {
         api.delete_watchlist(created_watchlist.id);
         std::cout << "Watchlist deleted successfully" << std::endl;
 
-    } catch (const alpaca::AlpacaTraderException& e) {
+    } catch (const alpaca::AlpacaException& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }

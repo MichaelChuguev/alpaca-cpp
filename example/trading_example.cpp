@@ -90,7 +90,7 @@ int main() {
         std::cout << "Portfolio has " << portfolio.snapshots.size() 
                   << " data points" << std::endl;
 
-    } catch (const alpaca::AlpacaTraderException& e) {
+    } catch (const alpaca::AlpacaException& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }

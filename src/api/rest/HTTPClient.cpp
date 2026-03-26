@@ -3,9 +3,23 @@
 #include <sstream>
 
 #include "alpaca/api/rest/HTTPClient.h"
+#include "alpaca/core/error.h"
 #include "alpaca/core/util.h"
 
 namespace alpaca {
+
+namespace {
+
+[[noreturn]] void throw_http_status_error(int status_code, const std::string& response_body) {
+    throw AlpacaException::from_http_response(status_code, response_body);
+}
+
+[[noreturn]] void throw_transport_error(const std::string& message,
+                                        const std::string& response_body = {}) {
+    throw AlpacaException::from_transport_error(message, response_body);
+}
+
+} // namespace
 
 // ---------------------------------------------------------------------------
 // Construction
@@ -146,18 +160,17 @@ nlohmann::json HttpClient::post_form(const std::string& endpoint,
     const auto response = http_client_.post(build_url(endpoint), body_stream.str(), args);
 
     if (!response) {
-        throw std::runtime_error("HTTP request failed: null response");
+        throw_transport_error("HTTP request failed: null response");
     }
 
     if (response->errorCode != ix::HttpErrorCode::Ok) {
-        throw std::runtime_error("HTTP transport error: " + response->errorMsg);
+        throw_transport_error("HTTP transport error: " + response->errorMsg, response->body);
     }
 
     if (response->statusCode != 200 &&
         response->statusCode != 201 &&
         response->statusCode != 204) {
-        throw std::runtime_error(
-            "HTTP " + std::to_string(response->statusCode) + ": " + response->body);
+        throw_http_status_error(response->statusCode, response->body);
     }
 
     if (response->body.empty()) {
@@ -229,15 +242,14 @@ void HttpClient::ensure_broker_token() const {
     const auto response = token_client.post(broker_auth_token_url_, body, args);
 
     if (!response || response->errorCode != ix::HttpErrorCode::Ok) {
-        throw std::runtime_error(
+        throw_transport_error(
             "Broker token refresh failed: " +
-            (response ? response->errorMsg : "null response"));
+            (response ? response->errorMsg : "null response"),
+            response ? response->body : "");
     }
 
     if (response->statusCode != 200) {
-        throw std::runtime_error(
-            "Broker token endpoint returned HTTP " +
-            std::to_string(response->statusCode) + ": " + response->body);
+        throw_http_status_error(response->statusCode, response->body);
     }
 
     const auto j        = nlohmann::json::parse(response->body);
@@ -339,18 +351,17 @@ nlohmann::json HttpClient::do_request(const std::string& method,
     }
 
     if (!response) {
-        throw std::runtime_error("HTTP request failed: null response");
+        throw_transport_error("HTTP request failed: null response");
     }
 
     if (response->errorCode != ix::HttpErrorCode::Ok) {
-        throw std::runtime_error("HTTP transport error: " + response->errorMsg);
+        throw_transport_error("HTTP transport error: " + response->errorMsg, response->body);
     }
 
     if (response->statusCode != 200 &&
         response->statusCode != 201 &&
         response->statusCode != 204) {
-        throw std::runtime_error(
-            "HTTP " + std::to_string(response->statusCode) + ": " + response->body);
+        throw_http_status_error(response->statusCode, response->body);
     }
 
     if (response->body.empty()) {
