@@ -282,8 +282,8 @@ AccountConfig AlpacaBrokerAPI::patch_trading_account_configurations(const std::s
     return AccountConfig(httpClient.patch("/v1/trading/accounts/" + account_id + "/account/configurations", config.to_json()));
 }
 
-BrokerEntity AlpacaBrokerAPI::get_account_trading_limits(const std::string& account_id) {
-    return BrokerEntity(httpClient.get("/v1/trading/accounts/" + account_id + "/limits"));
+BrokerAccountTradingLimit AlpacaBrokerAPI::get_account_trading_limits(const std::string& account_id) {
+    return BrokerAccountTradingLimit(httpClient.get("/v1/trading/accounts/" + account_id + "/limits"));
 }
 
 PortfolioHistory AlpacaBrokerAPI::get_portfolio_history_for_account(const std::string& account_id, const std::string& period, const std::string& timeframe, IntradayReporting reporting, const DateTime& start, PnlReset reset, const DateTime& end, const std::string& cashflow_types) {

@@ -12,6 +12,7 @@
 #include "alpaca/model/broker/common.h"
 #include "alpaca/model/broker/brokerAccount.h"
 #include "alpaca/model/broker/brokerAccountTradingDetails.h"
+#include "alpaca/model/broker/brokerAccountTradingLimit.h"
 #include "alpaca/model/broker/optionsApproval.h"
 #include "alpaca/model/broker/brokerAccountActivity.h"
 #include "alpaca/model/broker/pdtStatus.h"
@@ -100,13 +101,16 @@ public:
     std::vector<OptionsApproval> get_options_approvals_requests(const std::string& account_id = "", int requested_level = -1, int approved_level = -1, OptionsApprovalStatus status = OptionsApprovalStatus::UNSET, int page_size = -1, const std::string& page_token = "");
     /*
     *
-    *
     */
     std::vector<BrokerAccountActivity> get_account_activities(const std::string& account_id = "", const std::vector<ActivityType>& activity_types = {}, ActivityCategory category = ActivityCategory::UNSET, const DateTime& date = DateTime(), const DateTime& until = DateTime(), const DateTime& after = DateTime(), Sort direction = Sort::DESC, int page_size = -1, const std::string& page_token = "");
     std::vector<BrokerAccountActivity> get_account_activities_by_type(ActivityType activity_type, const std::string& account_id = "", const DateTime& date = DateTime(), const DateTime& until = DateTime(), const DateTime& after = DateTime(), Sort direction = Sort::DESC, int page_size = -1, const std::string& page_token = "");
     BrokerAccountTradingDetails get_trading_details_for_account(const std::string& account_id);
     PDTStatus get_pdt_status(const std::string& account_id);
     PDTStatus pdt_one_time_removal(const std::string& account_id);
+    /*
+    * Closes an account.
+    * IMPORTANT: BEFORE CLOSING AN ACCOUNT, YOU ARE RESPONSIBLE FOR CLOSING ALL THE POSITIONS AND WITHDRAWING ALL THE MONEY ASSOCIATED WITH THAT ACCOUNT.
+    */
     BrokerEntity close_account(const std::string& account_id, const json& request = json::object());
 
     // ── Account Documents ────────────────────────────────────────────────
@@ -135,7 +139,11 @@ public:
 
     // ── Trading: Account Config / Limits / Portfolio ────────────────────
     AccountConfig patch_trading_account_configurations(const std::string& account_id, const AccountConfig& config);
-    BrokerEntity get_account_trading_limits(const std::string& account_id);
+    /*
+    *
+    * Only available to accounts with the trading limits feature enabled, and not on JIT. 
+    */
+    BrokerAccountTradingLimit get_account_trading_limits(const std::string& account_id);
     PortfolioHistory get_portfolio_history_for_account(const std::string& account_id, const std::string& period, const std::string& timeframe, IntradayReporting reporting, const DateTime& start, PnlReset reset, const DateTime& end, const std::string& cashflow_types);
 
     // ── Instant Funding ──────────────────────────────────────────────────
