@@ -192,11 +192,47 @@ static void merge_option_chain_page(
         });
 }
 
-static void merge_option_chain_page(
-    const json& j,
-    json& snapshots) {
+static std::string build_option_chain_query(
+    const std::string& underlying_symbol,
+    OptionFeed feed,
+    int limit,
+    const DateTime& updated_since,
+    OptionContractType type,
+    const Decimal& strike_price_gte,
+    const Decimal& strike_price_lte,
+    const DateTime& expiration_date,
+    const DateTime& expiration_date_gte,
+    const DateTime& expiration_date_lte,
+    const std::string& root_symbol) {
 
-    merge_object_field_page(j, "snapshots", snapshots);
+    auto qb = QueryBuilder("/v1beta1/options/snapshots/" + url_encode(underlying_symbol))
+        .add("feed", option_feed_to_string(feed))
+        .add("limit", limit);
+
+    if (updated_since.to_epoch_seconds() > 0) {
+        qb.add("updated_since", updated_since.to_iso_string());
+    }
+
+    const std::string type_str = option_contract_type_to_string(type);
+    if (!type_str.empty()) {
+        qb.add("type", type_str);
+    }
+
+    qb.add("strike_price_gte", strike_price_gte)
+        .add("strike_price_lte", strike_price_lte);
+
+    if (expiration_date.to_epoch_seconds() > 0 && expiration_date.is_date_only()) {
+        qb.add("expiration_date", expiration_date.to_iso_string());
+    }
+    if (expiration_date_gte.to_epoch_seconds() > 0 && expiration_date_gte.is_date_only()) {
+        qb.add("expiration_date_gte", expiration_date_gte.to_iso_string());
+    }
+    if (expiration_date_lte.to_epoch_seconds() > 0 && expiration_date_lte.is_date_only()) {
+        qb.add("expiration_date_lte", expiration_date_lte.to_iso_string());
+    }
+
+    qb.add("root_symbol", root_symbol);
+    return qb.build();
 }
 
 // =====================================================================
@@ -693,14 +729,29 @@ std::map<std::string, OptionSnapshot> AlpacaMarketDataAPI::get_option_chain(
     const std::string& underlying_symbol,
     OptionFeed feed,
     const std::string& page_token,
-    int limit) {
-
-    auto qb = QueryBuilder("/v1beta1/options/snapshots/" + url_encode(underlying_symbol))
-        .add("feed", option_feed_to_string(resolve_option_feed(feed)))
-        .add("limit", limit);
+    int limit,
+    const DateTime& updated_since,
+    OptionContractType type,
+    const Decimal& strike_price_gte,
+    const Decimal& strike_price_lte,
+    const DateTime& expiration_date,
+    const DateTime& expiration_date_gte,
+    const DateTime& expiration_date_lte,
+    const std::string& root_symbol) {
 
     return collect_paginated<std::map<std::string, OptionSnapshot>>(
-        qb.build(),
+        build_option_chain_query(
+            underlying_symbol,
+            resolve_option_feed(feed),
+            limit,
+            updated_since,
+            type,
+            strike_price_gte,
+            strike_price_lte,
+            expiration_date,
+            expiration_date_gte,
+            expiration_date_lte,
+            root_symbol),
         page_token,
         [this](const std::string& endpoint) { return get_json(endpoint); },
         [](const json& j, auto& result) {

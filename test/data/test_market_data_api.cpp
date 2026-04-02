@@ -142,35 +142,37 @@ TEST(MarketDataAPITest, OptionChainAggregatesAllPages) {
     EXPECT_EQ(chain.at("AAPL260406P00232500").greeks_delta, Decimal(-0.0208));
 }
 
-TEST(MarketDataAPITest, OptionChainRawJsonAggregatesAllPages) {
+TEST(MarketDataAPITest, OptionChainIncludesOptionalFilters) {
     StubMarketDataAPI api;
 
-    json page1;
-    page1["snapshots"] = json::object();
-    page1["snapshots"]["AAPL260402P00155000"] =
-        make_snapshot_json("2026-02-13T15:45:05Z", "0.5", "0.01");
-    page1["next_page_token"] = "next-token";
+    json page;
+    page["snapshots"] = json::object();
+    page["snapshots"]["AAPL260418P00150000"] =
+        make_snapshot_json("2026-04-01T19:40:43Z", "0.03", "0.02", "0.4116");
 
-    json page2;
-    page2["snapshots"] = json::object();
-    page2["snapshots"]["AAPL260406C00230000"] =
-        make_snapshot_json("2026-04-01T19:25:08Z", "0.03", "0.04", "0.2871");
+    api.responses = {page};
 
-    api.responses = {page1, page2};
+    const auto chain = api.get_option_chain(
+        "AAPL",
+        OptionFeed::INDICATIVE,
+        "page+/=",
+        50,
+        DateTime("2026-04-01"),
+        OptionContractType::PUT,
+        Decimal(100.0),
+        Decimal(150.0),
+        DateTime("2026-04-18"),
+        DateTime("2026-04-01"),
+        DateTime("2026-04-30"),
+        "AAPL");
 
-    const json raw = api.get_option_chain_raw_json("AAPL", OptionFeed::INDICATIVE, "", 50);
-
-    ASSERT_EQ(api.requests.size(), 2u);
-    EXPECT_EQ(api.requests[0], "/v1beta1/options/snapshots/AAPL?feed=indicative&limit=50");
+    ASSERT_EQ(api.requests.size(), 1u);
     EXPECT_EQ(
-        api.requests[1],
-        "/v1beta1/options/snapshots/AAPL?feed=indicative&limit=50&page_token=next-token");
+        api.requests[0],
+        "/v1beta1/options/snapshots/AAPL?feed=indicative&limit=50&updated_since=2026-04-01&type=put&strike_price_gte=100&strike_price_lte=150&expiration_date=2026-04-18&expiration_date_gte=2026-04-01&expiration_date_lte=2026-04-30&root_symbol=AAPL&page_token=page%2B%2F%3D");
 
-    ASSERT_TRUE(raw.contains("snapshots"));
-    ASSERT_TRUE(raw["snapshots"].is_object());
-    EXPECT_FALSE(raw.contains("next_page_token"));
-    EXPECT_EQ(raw["snapshots"].size(), 2u);
-    EXPECT_EQ(raw["snapshots"]["AAPL260406C00230000"]["impliedVolatility"], "0.2871");
+    ASSERT_EQ(chain.size(), 1u);
+    EXPECT_EQ(chain.at("AAPL260418P00150000").implied_volatility, Decimal(0.4116));
 }
 
 TEST(MarketDataAPITest, StockBarsAggregateAllPages) {

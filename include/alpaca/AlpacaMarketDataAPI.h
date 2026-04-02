@@ -10,6 +10,7 @@
 #include "alpaca/api/rest/HTTPClient.h"
 #include "alpaca/model/data/stock.h"
 #include "alpaca/model/data/option_data.h"
+#include "alpaca/model/trader/option.h"
 #include "alpaca/model/data/crypto.h"
 #include "alpaca/model/data/news.h"
 
@@ -263,7 +264,15 @@ public:
         const std::string& underlying_symbol,
         OptionFeed feed = OptionFeed::DEFAULT,
         const std::string& page_token = "",
-        int limit = 0);
+        int limit = 0,
+        const DateTime& updated_since = DateTime(),
+        OptionContractType type = OptionContractType::UNSET,
+        const Decimal& strike_price_gte = Decimal{},
+        const Decimal& strike_price_lte = Decimal{},
+        const DateTime& expiration_date = DateTime(),
+        const DateTime& expiration_date_gte = DateTime(),
+        const DateTime& expiration_date_lte = DateTime(),
+        const std::string& root_symbol = "");
 
     /** Option meta conditions for a given tick type. */
     std::map<std::string, std::string> get_option_meta_conditions(TickType tick_type);

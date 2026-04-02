@@ -61,11 +61,13 @@ std::vector<OptionContract> AlpacaTraderAPI::get_option_contracts(const std::vec
         .add_list("underlying_symbols", underlying_symbols)
         .add("status", status == OptionContractStatus::ACTIVE ? "active" : "inactive")
         .add("root_symbol", root_symbol)
-        .add("type", type == OptionContractType::CALL ? "call" : "put")
         .add("style", style == OptionContractStyle::AMERICAN ? "american" : "european")
         .add("strike_price_gte", strike_price_gte)
         .add("strike_price_lte", strike_price_lte)
         .add("limit", limit);
+
+    const std::string type_str = option_contract_type_to_string(type);
+    if (!type_str.empty()) qb.add("type", type_str);
 
     if (show_deliverables) qb.add("show_deliverables", true);
     if (ppind) qb.add("ppind", true);

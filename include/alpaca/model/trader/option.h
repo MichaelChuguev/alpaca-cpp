@@ -12,13 +12,20 @@ namespace alpaca {
 
 using json = nlohmann::json;
 
+/**
+ * UNSET - Use when indifferent about the option type to be fetched
+ * CALL - Fetch call options only
+ * PUT - Fetch put options only
+ */
 enum class OptionContractType {
+    UNSET,
     CALL,
     PUT
 };
 
 inline std::string option_contract_type_to_string(OptionContractType t) {
     switch (t) {
+        case OptionContractType::UNSET: return "";
         case OptionContractType::CALL: return "call";
         case OptionContractType::PUT:  return "put";
         default: return "";
@@ -28,7 +35,7 @@ inline std::string option_contract_type_to_string(OptionContractType t) {
 inline OptionContractType string_to_option_contract_type(const std::string& s) {
     if (s == "call") return OptionContractType::CALL;
     if (s == "put")  return OptionContractType::PUT;
-    return OptionContractType::CALL;
+    return OptionContractType::UNSET;
 }
 
 enum class OptionContractStyle {
