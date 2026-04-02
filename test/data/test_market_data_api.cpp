@@ -179,14 +179,14 @@ TEST(MarketDataAPITest, StockBarsAggregateAllPages) {
     json page1;
     page1["bars"] = json::object();
     page1["bars"]["AAPL"] = json::array({
-        make_bar_json("2026-04-01T00:00:00Z", "100.00", "AAPL")
+        make_bar_json("2026-04-01T00:00:00Z", "100.00")
     });
     page1["next_page_token"] = "bars+/=";
 
     json page2;
     page2["bars"] = json::object();
     page2["bars"]["MSFT"] = json::array({
-        make_bar_json("2026-04-01T00:00:00Z", "200.00", "MSFT")
+        make_bar_json("2026-04-01T00:00:00Z", "200.00")
     });
 
     api.responses = {page1, page2};
@@ -203,7 +203,74 @@ TEST(MarketDataAPITest, StockBarsAggregateAllPages) {
 
     ASSERT_EQ(bars.size(), 2u);
     EXPECT_EQ(bars.at("AAPL").front().close, Decimal(100.00));
+    EXPECT_EQ(bars.at("AAPL").front().symbol, "AAPL");
     EXPECT_EQ(bars.at("MSFT").front().close, Decimal(200.00));
+    EXPECT_EQ(bars.at("MSFT").front().symbol, "MSFT");
+}
+
+TEST(MarketDataAPITest, StockBarsSingleBackfillsRequestedSymbol) {
+    StubMarketDataAPI api;
+
+    json page1;
+    page1["bars"] = json::array({
+        make_bar_json("2026-04-01T00:00:00Z", "100.00"),
+        make_bar_json("2026-04-02T00:00:00Z", "101.00")
+    });
+
+    api.responses = {page1};
+
+    const auto bars = api.get_stock_bars_single(
+        "AAPL",
+        DataTimeframe::ONE_DAY,
+        "",
+        "",
+        DataFeed::IEX,
+        "",
+        2);
+
+    ASSERT_EQ(api.requests.size(), 1u);
+    EXPECT_EQ(
+        api.requests[0],
+        "/v2/stocks/AAPL/bars?timeframe=1Day&feed=iex&limit=2&sort=asc");
+
+    ASSERT_EQ(bars.size(), 2u);
+    EXPECT_EQ(bars[0].symbol, "AAPL");
+    EXPECT_EQ(bars[1].symbol, "AAPL");
+}
+
+TEST(MarketDataAPITest, StockLatestBarsBackfillSymbols) {
+    StubMarketDataAPI api;
+
+    json response;
+    response["bars"] = json::object();
+    response["bars"]["AAPL"] = make_bar_json("2026-04-02T00:00:00Z", "101.00");
+    response["bars"]["MSFT"] = make_bar_json("2026-04-02T00:00:00Z", "202.00");
+
+    api.responses = {response};
+
+    const auto bars = api.get_stock_latest_bars({"AAPL", "MSFT"}, DataFeed::IEX);
+
+    ASSERT_EQ(api.requests.size(), 1u);
+    EXPECT_EQ(api.requests[0], "/v2/stocks/bars/latest?symbols=AAPL,MSFT&feed=iex");
+
+    ASSERT_EQ(bars.size(), 2u);
+    EXPECT_EQ(bars.at("AAPL").symbol, "AAPL");
+    EXPECT_EQ(bars.at("MSFT").symbol, "MSFT");
+}
+
+TEST(MarketDataAPITest, StockLatestBarSingleBackfillsRequestedSymbol) {
+    StubMarketDataAPI api;
+
+    json response;
+    response["bar"] = make_bar_json("2026-04-02T00:00:00Z", "101.00");
+
+    api.responses = {response};
+
+    const auto bar = api.get_stock_latest_bar_single("AAPL", DataFeed::IEX);
+
+    ASSERT_EQ(api.requests.size(), 1u);
+    EXPECT_EQ(api.requests[0], "/v2/stocks/AAPL/bars/latest?feed=iex");
+    EXPECT_EQ(bar.symbol, "AAPL");
 }
 
 TEST(MarketDataAPITest, OptionSnapshotsAggregateAllPages) {

@@ -70,6 +70,26 @@ static void merge_symbol_array_page(
     }
 }
 
+template <typename T, typename Factory>
+static void merge_symbol_array_page(
+    const json& j,
+    const char* key,
+    std::map<std::string, std::vector<T>>& result,
+    Factory&& factory) {
+
+    if (!j.contains(key) || !j[key].is_object()) {
+        return;
+    }
+
+    for (const auto& [sym, items_json] : j[key].items()) {
+        auto& items = result[sym];
+        items.reserve(items.size() + items_json.size());
+        for (const auto& item : items_json) {
+            items.push_back(factory(item, sym));
+        }
+    }
+}
+
 template <typename T>
 static void merge_array_page(
     const json& j,
@@ -84,6 +104,24 @@ static void merge_array_page(
     result.reserve(result.size() + items_json.size());
     for (const auto& item : items_json) {
         result.emplace_back(item);
+    }
+}
+
+template <typename T, typename Factory>
+static void merge_array_page(
+    const json& j,
+    const char* key,
+    std::vector<T>& result,
+    Factory&& factory) {
+
+    if (!j.contains(key) || !j[key].is_array()) {
+        return;
+    }
+
+    const auto& items_json = j[key];
+    result.reserve(result.size() + items_json.size());
+    for (const auto& item : items_json) {
+        result.push_back(factory(item));
     }
 }
 
@@ -359,7 +397,13 @@ std::map<std::string, std::vector<StockBar>> AlpacaMarketDataAPI::get_stock_bars
         page_token,
         [this](const std::string& endpoint) { return get_json(endpoint); },
         [](const json& j, auto& result) {
-            merge_symbol_array_page<StockBar>(j, "bars", result);
+            merge_symbol_array_page<StockBar>(
+                j,
+                "bars",
+                result,
+                [](const json& item, const std::string& sym) {
+                    return StockBar(item, sym);
+                });
         });
 }
 
@@ -385,8 +429,14 @@ std::vector<StockBar> AlpacaMarketDataAPI::get_stock_bars_single(
         qb.build(),
         page_token,
         [this](const std::string& endpoint) { return get_json(endpoint); },
-        [](const json& j, auto& result) {
-            merge_array_page<StockBar>(j, "bars", result);
+        [&symbol](const json& j, auto& result) {
+            merge_array_page<StockBar>(
+                j,
+                "bars",
+                result,
+                [&symbol](const json& item) {
+                    return StockBar(item, symbol);
+                });
         });
 }
 
@@ -399,12 +449,12 @@ std::map<std::string, StockBar> AlpacaMarketDataAPI::get_stock_latest_bars(
         .add("feed", data_feed_to_string(resolve_feed(feed)))
         .add("currency", currency);
 
-    json j = httpClient.get(qb.build());
+    json j = get_json(qb.build());
 
     std::map<std::string, StockBar> result;
     if (j.contains("bars") && j["bars"].is_object()) {
         for (auto& [sym, bar_json] : j["bars"].items()) {
-            result.emplace(sym, StockBar(bar_json));
+            result.emplace(sym, StockBar(bar_json, sym));
         }
     }
     return result;
@@ -418,9 +468,9 @@ StockBar AlpacaMarketDataAPI::get_stock_latest_bar_single(
         .add("feed", data_feed_to_string(resolve_feed(feed)))
         .add("currency", currency);
 
-    json j = httpClient.get(qb.build());
+    json j = get_json(qb.build());
     if (j.contains("bar") && !j["bar"].is_null()) {
-        return StockBar(j["bar"]);
+        return StockBar(j["bar"], symbol);
     }
     return StockBar();
 }

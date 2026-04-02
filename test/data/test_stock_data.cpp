@@ -201,6 +201,16 @@ TEST(StockBarTest, ParseMissingTradeCount) {
     EXPECT_EQ(bar.close, Decimal(175.25));
 }
 
+TEST(StockBarTest, BackfillsSymbolWhenJsonOmitsIt) {
+    json j = make_stock_bar_json();
+    j.erase("S");
+
+    StockBar bar(j, "AAPL");
+
+    EXPECT_EQ(bar.symbol, "AAPL");
+    EXPECT_EQ(bar.close, Decimal(175.25));
+}
+
 TEST(StockBarTest, ToString) {
     StockBar bar(make_stock_bar_json());
 
@@ -282,6 +292,19 @@ TEST(StockSnapshotTest, ParsePartialSnapshot) {
     StockSnapshot snap(j);
     EXPECT_EQ(snap.latest_trade.price, Decimal(175.25));
     EXPECT_EQ(snap.latest_quote.ask_price, Decimal());
+}
+
+TEST(StockSnapshotTest, BackfillsNestedBarSymbolsFromSnapshotSymbol) {
+    json j = make_stock_snapshot_json();
+    j["minuteBar"].erase("S");
+    j["dailyBar"].erase("S");
+    j["prevDailyBar"].erase("S");
+
+    StockSnapshot snap(j, "AAPL");
+
+    EXPECT_EQ(snap.minute_bar.symbol, "AAPL");
+    EXPECT_EQ(snap.daily_bar.symbol, "AAPL");
+    EXPECT_EQ(snap.prev_daily_bar.symbol, "AAPL");
 }
 
 // ---------------------------------------------------------------------------

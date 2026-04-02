@@ -95,7 +95,7 @@ struct StockBar {
     std::string symbol;
 
     StockBar() = default;
-    StockBar(const json& j)
+    StockBar(const json& j, const std::string& sym = "")
         : timestamp(parse_datetime(j, "t")),
           open(parse_decimal(j, "o")),
           high(parse_decimal(j, "h")),
@@ -106,6 +106,7 @@ struct StockBar {
           symbol(parse_string(j, "S"))
     {
         if (j.contains("n") && !j["n"].is_null()) trade_count = j["n"].get<uint64_t>();
+        if (symbol.empty()) symbol = sym;
     }
 
     std::string to_string() const {
@@ -186,11 +187,11 @@ struct StockSnapshot {
         if (j.contains("latestQuote") && !j["latestQuote"].is_null())
             latest_quote = StockQuote(j["latestQuote"]);
         if (j.contains("minuteBar") && !j["minuteBar"].is_null())
-            minute_bar = StockBar(j["minuteBar"]);
+            minute_bar = StockBar(j["minuteBar"], sym);
         if (j.contains("dailyBar") && !j["dailyBar"].is_null())
-            daily_bar = StockBar(j["dailyBar"]);
+            daily_bar = StockBar(j["dailyBar"], sym);
         if (j.contains("prevDailyBar") && !j["prevDailyBar"].is_null())
-            prev_daily_bar = StockBar(j["prevDailyBar"]);
+            prev_daily_bar = StockBar(j["prevDailyBar"], sym);
     }
 };
 
