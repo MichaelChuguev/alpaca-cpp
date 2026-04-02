@@ -265,16 +265,6 @@ public:
         const std::string& page_token = "",
         int limit = 0);
 
-    /**
-     * Option chain raw JSON (by underlying symbol).
-     *
-     */
-    json get_option_chain_raw_json(
-        const std::string& underlying_symbol,
-        OptionFeed feed = OptionFeed::DEFAULT,
-        const std::string& page_token = "",
-        int limit = 0);
-
     /** Option meta conditions for a given tick type. */
     std::map<std::string, std::string> get_option_meta_conditions(TickType tick_type);
 

@@ -708,25 +708,6 @@ std::map<std::string, OptionSnapshot> AlpacaMarketDataAPI::get_option_chain(
         });
 }
 
-json AlpacaMarketDataAPI::get_option_chain_raw_json(
-    const std::string& underlying_symbol,
-    OptionFeed feed,
-    const std::string& page_token,
-    int limit) {
-
-    auto qb = QueryBuilder("/v1beta1/options/snapshots/" + url_encode(underlying_symbol))
-        .add("feed", option_feed_to_string(resolve_option_feed(feed)))
-        .add("limit", limit);
-
-    return collect_paginated<json>(
-        qb.build(),
-        page_token,
-        [this](const std::string& endpoint) { return get_json(endpoint); },
-        [](const json& j, json& result) {
-            merge_option_chain_page(j, result);
-        });
-}
-
 std::map<std::string, std::string> AlpacaMarketDataAPI::get_option_meta_conditions(TickType tick_type) {
     json j = httpClient.get("/v1beta1/options/meta/conditions/" + tick_type_to_string(tick_type));
 
