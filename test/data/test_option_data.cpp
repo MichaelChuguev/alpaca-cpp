@@ -209,14 +209,3 @@ TEST(OptionSnapshotTest, ToStringIncludesAllFields) {
     EXPECT_NE(str.find("Greeks Vega: 0.12"), std::string::npos);
     EXPECT_NE(str.find("Greeks Rho: 0.08"), std::string::npos);
 }
-
-TEST(OptionSnapshotTest, ToStringCanOmitSymbol) {
-    OptionSnapshot snap(make_option_snapshot_json(), "AAPL250321C00200000");
-
-    std::string str = snap.to_string(false);
-
-    EXPECT_NE(str.find("Option Snapshot:"), std::string::npos);
-    EXPECT_EQ(str.find("Symbol: AAPL250321C00200000"), std::string::npos);
-    EXPECT_NE(str.find("Latest Trade Price: 5.75"), std::string::npos);
-    EXPECT_NE(str.find("Implied Volatility: 0.35"), std::string::npos);
-}

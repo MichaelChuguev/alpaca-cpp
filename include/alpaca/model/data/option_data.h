@@ -130,16 +130,10 @@ struct OptionSnapshot {
     }
 
     std::string to_string() const {
-        return to_string(true);
-    }
-
-    std::string to_string(bool include_symbol) const {
         std::ostringstream oss;
         oss << "Option Snapshot:\n";
-        if (include_symbol) {
-            oss << "Symbol: " << symbol << "\n";
-        }
-        oss << "Latest Trade Timestamp: " << latest_trade.timestamp.to_string() << "\n"
+        oss << "Symbol: " << symbol << "\n"
+            << "Latest Trade Timestamp: " << latest_trade.timestamp.to_string() << "\n"
             << "Latest Trade Price: " << latest_trade.price << "\n"
             << "Latest Trade Size: " << latest_trade.size << "\n"
             << "Latest Trade Exchange: " << latest_trade.exchange << "\n"
