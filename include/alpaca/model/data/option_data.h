@@ -1,5 +1,6 @@
 #pragma once
 
+#include <sstream>
 #include <string>
 #include <vector>
 #include <map>
@@ -126,6 +127,41 @@ struct OptionSnapshot {
             greeks_vega  = parse_decimal(g, "vega");
             greeks_rho   = parse_decimal(g, "rho");
         }
+    }
+
+    std::string to_string() const {
+        return to_string(true);
+    }
+
+    std::string to_string(bool include_symbol) const {
+        std::ostringstream oss;
+        oss << "Option Snapshot:\n";
+        if (include_symbol) {
+            oss << "Symbol: " << symbol << "\n";
+        }
+        oss << "Latest Trade Timestamp: " << latest_trade.timestamp.to_string() << "\n"
+            << "Latest Trade Price: " << latest_trade.price << "\n"
+            << "Latest Trade Size: " << latest_trade.size << "\n"
+            << "Latest Trade Exchange: " << latest_trade.exchange << "\n"
+            << "Latest Trade Condition: " << latest_trade.condition << "\n"
+            << "Latest Trade Symbol: " << latest_trade.symbol << "\n"
+            << "Latest Quote Timestamp: " << latest_quote.timestamp.to_string() << "\n"
+            << "Latest Quote Ask Price: " << latest_quote.ask_price << "\n"
+            << "Latest Quote Ask Size: " << latest_quote.ask_size << "\n"
+            << "Latest Quote Ask Exchange: " << latest_quote.ask_exchange << "\n"
+            << "Latest Quote Bid Price: " << latest_quote.bid_price << "\n"
+            << "Latest Quote Bid Size: " << latest_quote.bid_size << "\n"
+            << "Latest Quote Bid Exchange: " << latest_quote.bid_exchange << "\n"
+            << "Latest Quote Condition: " << latest_quote.condition << "\n"
+            << "Latest Quote Symbol: " << latest_quote.symbol << "\n"
+            << "Implied Volatility: " << implied_volatility << "\n"
+            << "Greeks Delta: " << greeks_delta << "\n"
+            << "Greeks Gamma: " << greeks_gamma << "\n"
+            << "Greeks Theta: " << greeks_theta << "\n"
+            << "Greeks Vega: " << greeks_vega << "\n"
+            << "Greeks Rho: " << greeks_rho << "\n";
+
+        return oss.str();
     }
 };
 

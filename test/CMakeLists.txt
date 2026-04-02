@@ -30,9 +30,11 @@ add_executable(alpaca-tests
     models/test_error.cpp
     models/test_broker_account_trading_details.cpp
     models/test_broker_account_trading_limit.cpp
+    models/test_broker_instant_funding.cpp
     models/test_stream_models.cpp
     trader/test_trader_api.cpp
     data/test_stock_data.cpp
+    data/test_market_data_api.cpp
     data/test_option_data.cpp
     data/test_market_data_query_utils.cpp
     data/test_crypto_data.cpp

@@ -17,6 +17,150 @@ static std::vector<T> parse_array(const json& j) {
     return out;
 }
 
+static std::string append_page_token(std::string query, const std::string& page_token) {
+    if (page_token.empty()) return query;
+
+    query += (query.find('?') == std::string::npos ? "?" : "&");
+    query += "page_token=" + url_encode(page_token);
+    return query;
+}
+
+static std::string extract_next_page_token(const json& j) {
+    if (j.contains("next_page_token") && !j["next_page_token"].is_null()) {
+        return j["next_page_token"].get<std::string>();
+    }
+    return "";
+}
+
+template <typename Result, typename FetchFn, typename MergeFn>
+static Result collect_paginated(
+    const std::string& base_query,
+    const std::string& page_token,
+    FetchFn&& fetch_page,
+    MergeFn&& merge_page) {
+
+    Result result;
+    std::string next_page_token = page_token;
+
+    do {
+        json j = fetch_page(append_page_token(base_query, next_page_token));
+        merge_page(j, result);
+        next_page_token = extract_next_page_token(j);
+    } while (!next_page_token.empty());
+
+    return result;
+}
+
+template <typename T>
+static void merge_symbol_array_page(
+    const json& j,
+    const char* key,
+    std::map<std::string, std::vector<T>>& result) {
+
+    if (!j.contains(key) || !j[key].is_object()) {
+        return;
+    }
+
+    for (const auto& [sym, items_json] : j[key].items()) {
+        auto& items = result[sym];
+        items.reserve(items.size() + items_json.size());
+        for (const auto& item : items_json) {
+            items.emplace_back(item);
+        }
+    }
+}
+
+template <typename T>
+static void merge_array_page(
+    const json& j,
+    const char* key,
+    std::vector<T>& result) {
+
+    if (!j.contains(key) || !j[key].is_array()) {
+        return;
+    }
+
+    const auto& items_json = j[key];
+    result.reserve(result.size() + items_json.size());
+    for (const auto& item : items_json) {
+        result.emplace_back(item);
+    }
+}
+
+template <typename T, typename Factory>
+static void merge_symbol_object_page(
+    const json& j,
+    const char* key,
+    std::map<std::string, T>& result,
+    Factory&& factory) {
+
+    if (!j.contains(key) || !j[key].is_object()) {
+        return;
+    }
+
+    for (const auto& [sym, item_json] : j[key].items()) {
+        result.insert_or_assign(sym, factory(item_json, sym));
+    }
+}
+
+static void merge_array_field_page(
+    const json& j,
+    const char* key,
+    json& result) {
+
+    if (!result.is_object()) {
+        result = json::object();
+    }
+    if (!result.contains(key) || !result[key].is_array()) {
+        result[key] = json::array();
+    }
+
+    if (j.contains(key) && j[key].is_array()) {
+        for (const auto& item : j[key]) {
+            result[key].push_back(item);
+        }
+    }
+}
+
+static void merge_object_field_page(
+    const json& j,
+    const char* key,
+    json& result) {
+
+    if (!result.is_object()) {
+        result = json::object();
+    }
+    if (!result.contains(key) || !result[key].is_object()) {
+        result[key] = json::object();
+    }
+
+    if (j.contains(key) && j[key].is_object()) {
+        for (const auto& [sym, item_json] : j[key].items()) {
+            result[key][sym] = item_json;
+        }
+    }
+}
+
+static void merge_option_chain_page(
+    const json& j,
+    std::map<std::string, OptionSnapshot>& result) {
+
+    merge_symbol_object_page<OptionSnapshot>(
+        j,
+        "snapshots",
+        result,
+        [](const json& snapshot_json, const std::string& sym) {
+            return OptionSnapshot(snapshot_json, sym);
+        });
+}
+
+static void merge_option_chain_page(
+    const json& j,
+    json& snapshots) {
+
+    merge_object_field_page(j, "snapshots", snapshots);
+}
+
 // =====================================================================
 //  STOCK ENDPOINTS
 // =====================================================================
@@ -36,20 +180,15 @@ std::map<std::string, std::vector<StockTrade>> AlpacaMarketDataAPI::get_stock_tr
         .add("feed", data_feed_to_string(resolve_feed(feed)))
         .add("currency", currency)
         .add("limit", limit)
-        .add("page_token", page_token)
         .add("sort", sort_to_string(sort));
 
-    json j = httpClient.get(qb.build());
-
-    std::map<std::string, std::vector<StockTrade>> result;
-    if (j.contains("trades") && j["trades"].is_object()) {
-        for (auto& [sym, trades_json] : j["trades"].items()) {
-            for (const auto& t : trades_json) {
-                result[sym].emplace_back(t);
-            }
-        }
-    }
-    return result;
+    return collect_paginated<std::map<std::string, std::vector<StockTrade>>>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, auto& result) {
+            merge_symbol_array_page<StockTrade>(j, "trades", result);
+        });
 }
 
 std::vector<StockTrade> AlpacaMarketDataAPI::get_stock_trades_single(
@@ -64,16 +203,15 @@ std::vector<StockTrade> AlpacaMarketDataAPI::get_stock_trades_single(
         .add("feed", data_feed_to_string(resolve_feed(feed)))
         .add("currency", currency)
         .add("limit", limit)
-        .add("page_token", page_token)
         .add("sort", sort_to_string(sort));
 
-    json j = httpClient.get(qb.build());
-
-    std::vector<StockTrade> result;
-    if (j.contains("trades") && j["trades"].is_array()) {
-        result = parse_array<StockTrade>(j["trades"]);
-    }
-    return result;
+    return collect_paginated<std::vector<StockTrade>>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, auto& result) {
+            merge_array_page<StockTrade>(j, "trades", result);
+        });
 }
 
 std::map<std::string, StockTrade> AlpacaMarketDataAPI::get_stock_latest_trades(
@@ -126,20 +264,15 @@ std::map<std::string, std::vector<StockQuote>> AlpacaMarketDataAPI::get_stock_qu
         .add("feed", data_feed_to_string(resolve_feed(feed)))
         .add("currency", currency)
         .add("limit", limit)
-        .add("page_token", page_token)
         .add("sort", sort_to_string(sort));
 
-    json j = httpClient.get(qb.build());
-
-    std::map<std::string, std::vector<StockQuote>> result;
-    if (j.contains("quotes") && j["quotes"].is_object()) {
-        for (auto& [sym, quotes_json] : j["quotes"].items()) {
-            for (const auto& q : quotes_json) {
-                result[sym].emplace_back(q);
-            }
-        }
-    }
-    return result;
+    return collect_paginated<std::map<std::string, std::vector<StockQuote>>>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, auto& result) {
+            merge_symbol_array_page<StockQuote>(j, "quotes", result);
+        });
 }
 
 std::vector<StockQuote> AlpacaMarketDataAPI::get_stock_quotes_single(
@@ -154,16 +287,15 @@ std::vector<StockQuote> AlpacaMarketDataAPI::get_stock_quotes_single(
         .add("feed", data_feed_to_string(resolve_feed(feed)))
         .add("currency", currency)
         .add("limit", limit)
-        .add("page_token", page_token)
         .add("sort", sort_to_string(sort));
 
-    json j = httpClient.get(qb.build());
-
-    std::vector<StockQuote> result;
-    if (j.contains("quotes") && j["quotes"].is_array()) {
-        result = parse_array<StockQuote>(j["quotes"]);
-    }
-    return result;
+    return collect_paginated<std::vector<StockQuote>>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, auto& result) {
+            merge_array_page<StockQuote>(j, "quotes", result);
+        });
 }
 
 std::map<std::string, StockQuote> AlpacaMarketDataAPI::get_stock_latest_quotes(
@@ -219,21 +351,16 @@ std::map<std::string, std::vector<StockBar>> AlpacaMarketDataAPI::get_stock_bars
         .add("feed", data_feed_to_string(resolve_feed(feed)))
         .add("currency", currency)
         .add("limit", limit)
-        .add("page_token", page_token)
         .add("sort", sort_to_string(sort))
         .add("adjustment", adjustment);
 
-    json j = httpClient.get(qb.build());
-
-    std::map<std::string, std::vector<StockBar>> result;
-    if (j.contains("bars") && j["bars"].is_object()) {
-        for (auto& [sym, bars_json] : j["bars"].items()) {
-            for (const auto& b : bars_json) {
-                result[sym].emplace_back(b);
-            }
-        }
-    }
-    return result;
+    return collect_paginated<std::map<std::string, std::vector<StockBar>>>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, auto& result) {
+            merge_symbol_array_page<StockBar>(j, "bars", result);
+        });
 }
 
 std::vector<StockBar> AlpacaMarketDataAPI::get_stock_bars_single(
@@ -251,17 +378,16 @@ std::vector<StockBar> AlpacaMarketDataAPI::get_stock_bars_single(
         .add("feed", data_feed_to_string(resolve_feed(feed)))
         .add("currency", currency)
         .add("limit", limit)
-        .add("page_token", page_token)
         .add("sort", sort_to_string(sort))
         .add("adjustment", adjustment);
 
-    json j = httpClient.get(qb.build());
-
-    std::vector<StockBar> result;
-    if (j.contains("bars") && j["bars"].is_array()) {
-        result = parse_array<StockBar>(j["bars"]);
-    }
-    return result;
+    return collect_paginated<std::vector<StockBar>>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, auto& result) {
+            merge_array_page<StockBar>(j, "bars", result);
+        });
 }
 
 std::map<std::string, StockBar> AlpacaMarketDataAPI::get_stock_latest_bars(
@@ -314,20 +440,15 @@ std::map<std::string, std::vector<StockAuction>> AlpacaMarketDataAPI::get_stock_
         .add("feed", data_feed_to_string(resolve_feed(feed)))
         .add("currency", currency)
         .add("limit", limit)
-        .add("page_token", page_token)
         .add("sort", sort_to_string(sort));
 
-    json j = httpClient.get(qb.build());
-
-    std::map<std::string, std::vector<StockAuction>> result;
-    if (j.contains("auctions") && j["auctions"].is_object()) {
-        for (auto& [sym, auctions_json] : j["auctions"].items()) {
-            for (const auto& a : auctions_json) {
-                result[sym].emplace_back(a);
-            }
-        }
-    }
-    return result;
+    return collect_paginated<std::map<std::string, std::vector<StockAuction>>>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, auto& result) {
+            merge_symbol_array_page<StockAuction>(j, "auctions", result);
+        });
 }
 
 std::vector<StockAuction> AlpacaMarketDataAPI::get_stock_auctions_single(
@@ -342,16 +463,15 @@ std::vector<StockAuction> AlpacaMarketDataAPI::get_stock_auctions_single(
         .add("feed", data_feed_to_string(resolve_feed(feed)))
         .add("currency", currency)
         .add("limit", limit)
-        .add("page_token", page_token)
         .add("sort", sort_to_string(sort));
 
-    json j = httpClient.get(qb.build());
-
-    std::vector<StockAuction> result;
-    if (j.contains("auctions") && j["auctions"].is_array()) {
-        result = parse_array<StockAuction>(j["auctions"]);
-    }
-    return result;
+    return collect_paginated<std::vector<StockAuction>>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, auto& result) {
+            merge_array_page<StockAuction>(j, "auctions", result);
+        });
 }
 
 // ── Snapshots ────────────────────────────────────────────────────────
@@ -424,20 +544,15 @@ std::map<std::string, std::vector<OptionBar>> AlpacaMarketDataAPI::get_option_ba
         .add("start", start)
         .add("end", end)
         .add("limit", limit)
-        .add("page_token", page_token)
         .add("sort", sort_to_string(sort));
 
-    json j = httpClient.get(qb.build());
-
-    std::map<std::string, std::vector<OptionBar>> result;
-    if (j.contains("bars") && j["bars"].is_object()) {
-        for (auto& [sym, bars_json] : j["bars"].items()) {
-            for (const auto& b : bars_json) {
-                result[sym].emplace_back(b);
-            }
-        }
-    }
-    return result;
+    return collect_paginated<std::map<std::string, std::vector<OptionBar>>>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, auto& result) {
+            merge_symbol_array_page<OptionBar>(j, "bars", result);
+        });
 }
 
 std::map<std::string, std::vector<OptionTrade>> AlpacaMarketDataAPI::get_option_trades(
@@ -450,20 +565,15 @@ std::map<std::string, std::vector<OptionTrade>> AlpacaMarketDataAPI::get_option_
         .add("start", start)
         .add("end", end)
         .add("limit", limit)
-        .add("page_token", page_token)
         .add("sort", sort_to_string(sort));
 
-    json j = httpClient.get(qb.build());
-
-    std::map<std::string, std::vector<OptionTrade>> result;
-    if (j.contains("trades") && j["trades"].is_object()) {
-        for (auto& [sym, trades_json] : j["trades"].items()) {
-            for (const auto& t : trades_json) {
-                result[sym].emplace_back(t);
-            }
-        }
-    }
-    return result;
+    return collect_paginated<std::map<std::string, std::vector<OptionTrade>>>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, auto& result) {
+            merge_symbol_array_page<OptionTrade>(j, "trades", result);
+        });
 }
 
 std::map<std::string, OptionTrade> AlpacaMarketDataAPI::get_option_latest_trades(
@@ -506,39 +616,65 @@ std::map<std::string, OptionQuote> AlpacaMarketDataAPI::get_option_latest_quotes
 
 std::map<std::string, OptionSnapshot> AlpacaMarketDataAPI::get_option_snapshots(
     const std::vector<std::string>& symbols,
-    OptionFeed feed) {
+    OptionFeed feed,
+    int limit, const std::string& page_token) {
 
     auto qb = QueryBuilder("/v1beta1/options/snapshots")
         .add_list("symbols", symbols)
-        .add("feed", option_feed_to_string(resolve_option_feed(feed)));
+        .add("feed", option_feed_to_string(resolve_option_feed(feed)))
+        .add("limit", limit);
 
-    json j = httpClient.get(qb.build());
-
-    std::map<std::string, OptionSnapshot> result;
-    if (j.contains("snapshots") && j["snapshots"].is_object()) {
-        for (auto& [sym, snapshot_json] : j["snapshots"].items()) {
-            result.emplace(sym, OptionSnapshot(snapshot_json, sym));
-        }
-    }
-    return result;
+    return collect_paginated<std::map<std::string, OptionSnapshot>>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, auto& result) {
+            merge_symbol_object_page<OptionSnapshot>(
+                j,
+                "snapshots",
+                result,
+                [](const json& snapshot_json, const std::string& sym) {
+                    return OptionSnapshot(snapshot_json, sym);
+                });
+        });
 }
 
 std::map<std::string, OptionSnapshot> AlpacaMarketDataAPI::get_option_chain(
     const std::string& underlying_symbol,
-    OptionFeed feed) {
+    OptionFeed feed,
+    const std::string& page_token,
+    int limit) {
 
     auto qb = QueryBuilder("/v1beta1/options/snapshots/" + url_encode(underlying_symbol))
-        .add("feed", option_feed_to_string(resolve_option_feed(feed)));
+        .add("feed", option_feed_to_string(resolve_option_feed(feed)))
+        .add("limit", limit);
 
-    json j = httpClient.get(qb.build());
+    return collect_paginated<std::map<std::string, OptionSnapshot>>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, auto& result) {
+            merge_option_chain_page(j, result);
+        });
+}
 
-    std::map<std::string, OptionSnapshot> result;
-    if (j.contains("snapshots") && j["snapshots"].is_object()) {
-        for (auto& [sym, snapshot_json] : j["snapshots"].items()) {
-            result.emplace(sym, OptionSnapshot(snapshot_json, sym));
-        }
-    }
-    return result;
+json AlpacaMarketDataAPI::get_option_chain_raw_json(
+    const std::string& underlying_symbol,
+    OptionFeed feed,
+    const std::string& page_token,
+    int limit) {
+
+    auto qb = QueryBuilder("/v1beta1/options/snapshots/" + url_encode(underlying_symbol))
+        .add("feed", option_feed_to_string(resolve_option_feed(feed)))
+        .add("limit", limit);
+
+    return collect_paginated<json>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, json& result) {
+            merge_option_chain_page(j, result);
+        });
 }
 
 std::map<std::string, std::string> AlpacaMarketDataAPI::get_option_meta_conditions(TickType tick_type) {
@@ -578,20 +714,15 @@ std::map<std::string, std::vector<CryptoBar>> AlpacaMarketDataAPI::get_crypto_ba
         .add("start", start)
         .add("end", end)
         .add("limit", limit)
-        .add("page_token", page_token)
         .add("sort", sort_to_string(sort));
 
-    json j = httpClient.get(qb.build());
-
-    std::map<std::string, std::vector<CryptoBar>> result;
-    if (j.contains("bars") && j["bars"].is_object()) {
-        for (auto& [sym, bars_json] : j["bars"].items()) {
-            for (const auto& b : bars_json) {
-                result[sym].emplace_back(b);
-            }
-        }
-    }
-    return result;
+    return collect_paginated<std::map<std::string, std::vector<CryptoBar>>>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, auto& result) {
+            merge_symbol_array_page<CryptoBar>(j, "bars", result);
+        });
 }
 
 std::map<std::string, CryptoBar> AlpacaMarketDataAPI::get_crypto_latest_bars(
@@ -624,20 +755,15 @@ std::map<std::string, std::vector<CryptoTrade>> AlpacaMarketDataAPI::get_crypto_
         .add("start", start)
         .add("end", end)
         .add("limit", limit)
-        .add("page_token", page_token)
         .add("sort", sort_to_string(sort));
 
-    json j = httpClient.get(qb.build());
-
-    std::map<std::string, std::vector<CryptoTrade>> result;
-    if (j.contains("trades") && j["trades"].is_object()) {
-        for (auto& [sym, trades_json] : j["trades"].items()) {
-            for (const auto& t : trades_json) {
-                result[sym].emplace_back(t);
-            }
-        }
-    }
-    return result;
+    return collect_paginated<std::map<std::string, std::vector<CryptoTrade>>>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, auto& result) {
+            merge_symbol_array_page<CryptoTrade>(j, "trades", result);
+        });
 }
 
 std::map<std::string, CryptoTrade> AlpacaMarketDataAPI::get_crypto_latest_trades(
@@ -670,20 +796,15 @@ std::map<std::string, std::vector<CryptoQuote>> AlpacaMarketDataAPI::get_crypto_
         .add("start", start)
         .add("end", end)
         .add("limit", limit)
-        .add("page_token", page_token)
         .add("sort", sort_to_string(sort));
 
-    json j = httpClient.get(qb.build());
-
-    std::map<std::string, std::vector<CryptoQuote>> result;
-    if (j.contains("quotes") && j["quotes"].is_object()) {
-        for (auto& [sym, quotes_json] : j["quotes"].items()) {
-            for (const auto& q : quotes_json) {
-                result[sym].emplace_back(q);
-            }
-        }
-    }
-    return result;
+    return collect_paginated<std::map<std::string, std::vector<CryptoQuote>>>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, auto& result) {
+            merge_symbol_array_page<CryptoQuote>(j, "quotes", result);
+        });
 }
 
 std::map<std::string, CryptoQuote> AlpacaMarketDataAPI::get_crypto_latest_quotes(
@@ -773,20 +894,24 @@ std::map<std::string, std::vector<ForexRate>> AlpacaMarketDataAPI::get_forex_rat
         .add("start", start)
         .add("end", end)
         .add("limit", limit)
-        .add("page_token", page_token)
         .add("sort", sort_to_string(sort));
 
-    json j = httpClient.get(qb.build());
-
-    std::map<std::string, std::vector<ForexRate>> result;
-    if (j.contains("rates") && j["rates"].is_object()) {
-        for (auto& [pair, rates_json] : j["rates"].items()) {
-            for (const auto& r : rates_json) {
-                result[pair].emplace_back(r, pair);
+    return collect_paginated<std::map<std::string, std::vector<ForexRate>>>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, auto& result) {
+            if (!j.contains("rates") || !j["rates"].is_object()) {
+                return;
             }
-        }
-    }
-    return result;
+            for (const auto& [pair, rates_json] : j["rates"].items()) {
+                auto& rates = result[pair];
+                rates.reserve(rates.size() + rates_json.size());
+                for (const auto& rate_json : rates_json) {
+                    rates.emplace_back(rate_json, pair);
+                }
+            }
+        });
 }
 
 // =====================================================================
@@ -868,18 +993,17 @@ std::vector<NewsArticle> AlpacaMarketDataAPI::get_news(
         .add("start", start)
         .add("end", end)
         .add("limit", limit)
-        .add("page_token", page_token)
         .add("sort", sort_to_string(sort));
 
     if (include_content) qb.add("include_content", true);
 
-    json j = httpClient.get(qb.build());
-
-    std::vector<NewsArticle> result;
-    if (j.contains("news") && j["news"].is_array()) {
-        result = parse_array<NewsArticle>(j["news"]);
-    }
-    return result;
+    return collect_paginated<std::vector<NewsArticle>>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, auto& result) {
+            merge_array_page<NewsArticle>(j, "news", result);
+        });
 }
 
 // =====================================================================
@@ -898,10 +1022,15 @@ json AlpacaMarketDataAPI::get_corporate_actions(
         .add("start", start)
         .add("end", end)
         .add("limit", limit)
-        .add("page_token", page_token)
         .add("sort", sort_to_string(sort));
 
-    return httpClient.get(qb.build());
+    return collect_paginated<json>(
+        qb.build(),
+        page_token,
+        [this](const std::string& endpoint) { return get_json(endpoint); },
+        [](const json& j, json& result) {
+            merge_array_field_page(j, "corporate_actions", result);
+        });
 }
 
 } // namespace alpaca

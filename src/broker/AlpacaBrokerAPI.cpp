@@ -150,8 +150,8 @@ PDTStatus AlpacaBrokerAPI::pdt_one_time_removal(const std::string& account_id) {
     return PDTStatus(httpClient.post("/v1/trading/accounts/" + account_id + "/account/pdt/one-time-removal", json::object()));
 }
 
-BrokerEntity AlpacaBrokerAPI::close_account(const std::string& account_id, const json& request) {
-    return BrokerEntity(httpClient.post("/v1/accounts/" + account_id + "/actions/close", request));
+void AlpacaBrokerAPI::close_account(const std::string& account_id) {
+    httpClient.post("/v1/accounts/" + account_id + "/actions/close", json::object());
 }
 
 // ---------------------------------------------------------------------------
@@ -304,8 +304,8 @@ PortfolioHistory AlpacaBrokerAPI::get_portfolio_history_for_account(const std::s
 // Instant Funding
 // ---------------------------------------------------------------------------
 
-std::vector<BrokerEntity> AlpacaBrokerAPI::get_instant_funding_list(const std::string& query) {
-    return parse_array<BrokerEntity>(httpClient.get(with_query("/v1/instant_funding", query)));
+std::vector<BrokerInstantFunding> AlpacaBrokerAPI::get_instant_funding_list(const std::string& query) {
+    return parse_array<BrokerInstantFunding>(httpClient.get(with_query("/v1/instant_funding", query)));
 }
 
 BrokerEntity AlpacaBrokerAPI::create_instant_funding(const json& request) {

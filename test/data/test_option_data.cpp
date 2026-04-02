@@ -184,3 +184,39 @@ TEST(OptionSnapshotTest, ParseNullLatestTrade) {
     EXPECT_EQ(snap.latest_trade.price, Decimal());
     EXPECT_EQ(snap.latest_quote.ask_price, Decimal(5.90));
 }
+
+TEST(OptionSnapshotTest, ToStringIncludesAllFields) {
+    OptionSnapshot snap(make_option_snapshot_json(), "AAPL250321C00200000");
+
+    std::string str = snap.to_string();
+
+    EXPECT_NE(str.find("Option Snapshot:"), std::string::npos);
+    EXPECT_NE(str.find("Symbol: AAPL250321C00200000"), std::string::npos);
+    EXPECT_NE(str.find("Latest Trade Price: 5.75"), std::string::npos);
+    EXPECT_NE(str.find("Latest Trade Size: 10"), std::string::npos);
+    EXPECT_NE(str.find("Latest Trade Exchange: C"), std::string::npos);
+    EXPECT_NE(str.find("Latest Trade Condition: I"), std::string::npos);
+    EXPECT_NE(str.find("Latest Quote Ask Price: 5.9"), std::string::npos);
+    EXPECT_NE(str.find("Latest Quote Ask Size: 50"), std::string::npos);
+    EXPECT_NE(str.find("Latest Quote Bid Price: 5.6"), std::string::npos);
+    EXPECT_NE(str.find("Latest Quote Bid Size: 40"), std::string::npos);
+    EXPECT_NE(str.find("Latest Quote Bid Exchange: B"), std::string::npos);
+    EXPECT_NE(str.find("Latest Quote Condition: A"), std::string::npos);
+    EXPECT_NE(str.find("Implied Volatility: 0.35"), std::string::npos);
+    EXPECT_NE(str.find("Greeks Delta: 0.65"), std::string::npos);
+    EXPECT_NE(str.find("Greeks Gamma: 0.03"), std::string::npos);
+    EXPECT_NE(str.find("Greeks Theta: -0.05"), std::string::npos);
+    EXPECT_NE(str.find("Greeks Vega: 0.12"), std::string::npos);
+    EXPECT_NE(str.find("Greeks Rho: 0.08"), std::string::npos);
+}
+
+TEST(OptionSnapshotTest, ToStringCanOmitSymbol) {
+    OptionSnapshot snap(make_option_snapshot_json(), "AAPL250321C00200000");
+
+    std::string str = snap.to_string(false);
+
+    EXPECT_NE(str.find("Option Snapshot:"), std::string::npos);
+    EXPECT_EQ(str.find("Symbol: AAPL250321C00200000"), std::string::npos);
+    EXPECT_NE(str.find("Latest Trade Price: 5.75"), std::string::npos);
+    EXPECT_NE(str.find("Implied Volatility: 0.35"), std::string::npos);
+}

@@ -11,6 +11,7 @@
 #include "alpaca/BrokerSSEClient.h"
 #include "alpaca/model/broker/common.h"
 #include "alpaca/model/broker/brokerAccount.h"
+#include "alpaca/model/broker/brokerInstantFunding.h"
 #include "alpaca/model/broker/brokerAccountTradingDetails.h"
 #include "alpaca/model/broker/brokerAccountTradingLimit.h"
 #include "alpaca/model/broker/optionsApproval.h"
@@ -111,7 +112,7 @@ public:
     * Closes an account.
     * IMPORTANT: BEFORE CLOSING AN ACCOUNT, YOU ARE RESPONSIBLE FOR CLOSING ALL THE POSITIONS AND WITHDRAWING ALL THE MONEY ASSOCIATED WITH THAT ACCOUNT.
     */
-    BrokerEntity close_account(const std::string& account_id, const json& request = json::object());
+    void close_account(const std::string& account_id);
 
     // ── Account Documents ────────────────────────────────────────────────
     std::vector<BrokerAccountDocument> get_docs_for_account(const std::string& account_id, BrokerAccountDocumentType type = BrokerAccountDocumentType::UNSET, const DateTime& start = DateTime(), const DateTime& end = DateTime(), const std::string& page_token = "");
@@ -147,7 +148,7 @@ public:
     PortfolioHistory get_portfolio_history_for_account(const std::string& account_id, const std::string& period, const std::string& timeframe, IntradayReporting reporting, const DateTime& start, PnlReset reset, const DateTime& end, const std::string& cashflow_types);
 
     // ── Instant Funding ──────────────────────────────────────────────────
-    std::vector<BrokerEntity> get_instant_funding_list(const std::string& query = "");
+    std::vector<BrokerInstantFunding> get_instant_funding_list(const std::string& query = "");
     BrokerEntity create_instant_funding(const json& request);
     BrokerEntity get_instant_funding_single(const std::string& instant_funding_id);
     void delete_instant_funding_single(const std::string& instant_funding_id);

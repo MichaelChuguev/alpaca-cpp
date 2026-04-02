@@ -29,6 +29,11 @@ protected:
 
     HttpClient httpClient;
 
+    /** Wrapper for HTTP GET to allow focused API tests to stub responses. */
+    virtual json get_json(const std::string& endpoint) {
+        return httpClient.get(endpoint);
+    }
+
     /** Resolve DataFeed::DEFAULT to the stored default. */
     DataFeed resolve_feed(DataFeed feed) const {
         return feed == DataFeed::DEFAULT ? defaultDataFeed : feed;
@@ -61,6 +66,8 @@ public:
           defaultOptionFeed(defaultOptionFeed),
           httpClient(keyID, keySecret, marketDataEndpoint)
     {}
+
+    virtual ~AlpacaMarketDataAPI() = default;
 
     // =====================================================================
     //  STOCK ENDPOINTS (/v2/stocks/...)
@@ -237,15 +244,36 @@ public:
         const std::vector<std::string>& symbols,
         OptionFeed feed = OptionFeed::DEFAULT);
 
-    /** Option snapshots (multi-symbol). Supports option feed selection. */
+    /**
+     * Option snapshots (multi-symbol). Supports option feed selection.
+     *
+     */
     std::map<std::string, OptionSnapshot> get_option_snapshots(
         const std::vector<std::string>& symbols,
-        OptionFeed feed = OptionFeed::DEFAULT);
+        OptionFeed feed = OptionFeed::DEFAULT,
+        int limit = 0, const std::string& page_token = "");
 
-    /** Option chain (by underlying symbol). Supports option feed selection. */
+    /**
+     * Option chain (by underlying symbol).
+     *
+     * Map of <symbol, OptionSnapshot>.
+     * OptionSnapshot also contains the contract symbol, so for the full snapshot alone just use option_chain.second 
+     */
     std::map<std::string, OptionSnapshot> get_option_chain(
         const std::string& underlying_symbol,
-        OptionFeed feed = OptionFeed::DEFAULT);
+        OptionFeed feed = OptionFeed::DEFAULT,
+        const std::string& page_token = "",
+        int limit = 0);
+
+    /**
+     * Option chain raw JSON (by underlying symbol).
+     *
+     */
+    json get_option_chain_raw_json(
+        const std::string& underlying_symbol,
+        OptionFeed feed = OptionFeed::DEFAULT,
+        const std::string& page_token = "",
+        int limit = 0);
 
     /** Option meta conditions for a given tick type. */
     std::map<std::string, std::string> get_option_meta_conditions(TickType tick_type);
