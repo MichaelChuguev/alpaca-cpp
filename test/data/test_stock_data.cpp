@@ -201,6 +201,23 @@ TEST(StockBarTest, ParseMissingTradeCount) {
     EXPECT_EQ(bar.close, Decimal(175.25));
 }
 
+TEST(StockBarTest, ToString) {
+    StockBar bar(make_stock_bar_json());
+
+    const std::string str = bar.to_string();
+
+    EXPECT_NE(str.find("Stock Bar:"), std::string::npos);
+    EXPECT_NE(str.find("Timestamp: 2026-03-10"), std::string::npos);
+    EXPECT_NE(str.find("Open: 174.5"), std::string::npos);
+    EXPECT_NE(str.find("High: 176"), std::string::npos);
+    EXPECT_NE(str.find("Low: 173.8"), std::string::npos);
+    EXPECT_NE(str.find("Close: 175.25"), std::string::npos);
+    EXPECT_NE(str.find("Volume: 50000000"), std::string::npos);
+    EXPECT_NE(str.find("Trade Count: 350000"), std::string::npos);
+    EXPECT_NE(str.find("VWAP: 175.1"), std::string::npos);
+    EXPECT_NE(str.find("Symbol: AAPL"), std::string::npos);
+}
+
 // ---------------------------------------------------------------------------
 // StockAuction tests
 // ---------------------------------------------------------------------------

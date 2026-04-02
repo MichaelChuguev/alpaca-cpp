@@ -1,5 +1,6 @@
 #pragma once
 
+#include <sstream>
 #include <string>
 #include <vector>
 #include <map>
@@ -105,6 +106,21 @@ struct StockBar {
           symbol(parse_string(j, "S"))
     {
         if (j.contains("n") && !j["n"].is_null()) trade_count = j["n"].get<uint64_t>();
+    }
+
+    std::string to_string() const {
+        std::ostringstream oss;
+        oss << "Stock Bar:\n"
+            << "Timestamp: " << timestamp.to_string() << "\n"
+            << "Open: " << open << "\n"
+            << "High: " << high << "\n"
+            << "Low: " << low << "\n"
+            << "Close: " << close << "\n"
+            << "Volume: " << volume << "\n"
+            << "Trade Count: " << trade_count << "\n"
+            << "VWAP: " << vwap << "\n"
+            << "Symbol: " << symbol << "\n";
+        return oss.str();
     }
 };
 
